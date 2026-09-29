@@ -2290,6 +2290,10 @@ html, body {
   border-top: 1px solid rgba(217, 107, 130, 0.4);
 }
 
+.mobile-comic-artwork-frame {
+  display: none !important;
+}
+
 .story-text-container {
   display: flex;
   flex-direction: column;
@@ -3928,68 +3932,137 @@ html, body {
   }
 
   .reader-book-viewport {
-    padding: 0.35rem;
+    padding: 0.35rem 0.6rem;
     perspective: none;
+    position: relative;
+    overflow: hidden;
   }
 
   .book-spread-container {
-    height: calc(100vh - 105px);
+    height: calc(100vh - 75px);
     max-height: none;
     width: 100%;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  }
-
-  .book-page-half {
-    padding: 1.1rem 1rem 1.8rem;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  .book-page-right {
-    padding-top: 1.35rem;
+  .book-spread-container::after {
+    display: none !important;
   }
 
-  .comic-artwork-frame {
-    min-height: 190px;
-    max-height: 250px;
-    border-radius: 8px;
+  /* On mobile, realistic 3D overlay is disabled for instant crisp page transitions */
+  .turning-page-overlay {
+    display: none !important;
+  }
+
+  /* On mobile, hide the redundant separate left page panel to eliminate all dead white space */
+  .book-page-left {
+    display: none !important;
+  }
+
+  /* The right page becomes the single, unified, beautiful mobile story page */
+  .book-page-right {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    height: auto;
+    min-height: 100%;
+    border-radius: 14px;
+    padding: 0.95rem 1.85rem 1.4rem;
+    background: #ffffff !important;
+    box-sizing: border-box;
+    overflow-y: visible;
+  }
+
+  /* The mobile comic artwork sits right under the chapter title in the center! */
+  .mobile-comic-artwork-frame {
+    display: block !important;
+    width: 100%;
+    height: 175px;
+    min-height: 175px;
+    flex-shrink: 0 !important;
+    margin: 0.45rem 0 0.75rem;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #1e293b;
+    background: #0f172a;
+    position: relative;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  }
+
+  .mobile-comic-artwork-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .mobile-comic-artwork-frame .comic-caption-badge {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.88);
+    color: #fff;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 0.76rem;
+    padding: 0.4rem 0.75rem;
+    border-top: 1px solid rgba(217, 107, 130, 0.4);
   }
 
   .chapter-number {
     font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.15rem;
+    color: var(--rose-dark);
+    font-weight: 700;
   }
 
   .chapter-heading {
-    font-size: 1.28rem;
-    margin-bottom: 0.6rem;
+    font-size: 1.25rem;
+    line-height: 1.25;
+    margin-bottom: 0.35rem;
+    color: #0f172a;
+    font-weight: 700;
   }
 
   .story-paragraph {
-    font-size: 0.94rem;
-    line-height: 1.62;
-    margin-bottom: 0.85rem;
+    font-size: 0.9rem;
+    line-height: 1.58;
+    margin-bottom: 0.65rem;
+    color: #1e293b;
   }
 
-  .story-gold-highlight {
-    font-size: 0.9rem;
-    padding: 0.65rem 0.85rem;
-    margin: 0.85rem 0;
+  .story-gold-highlight,
+  .story-quote-highlight {
+    font-size: 0.86rem;
+    line-height: 1.5;
+    padding: 0.55rem 0.8rem;
+    margin: 0.65rem 0;
+    border-radius: 8px;
   }
 
   .story-final-smile {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    margin: 0.6rem 0;
   }
 
-  /* Nav buttons placed precisely in the center white space area at top of chapter */
+  /* Floating Nav Buttons: placed at the left & right outer margins, vertically centered */
   .reader-page-nav {
-    width: 36px;
-    height: 36px;
-    font-size: 0.92rem;
-    top: 49.3%;
+    width: 38px;
+    height: 38px;
+    font-size: 0.95rem;
+    top: 50%;
     bottom: auto;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(217, 107, 130, 0.25);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
     border: 1.5px solid var(--rose-primary);
     color: var(--rose-dark);
     z-index: 100;
@@ -4002,11 +4075,11 @@ html, body {
   }
 
   .reader-page-nav.prev-nav {
-    left: 8px;
+    left: 4px;
   }
 
   .reader-page-nav.next-nav {
-    right: 8px;
+    right: 4px;
   }
 
   /* Reader Tutorial Walkthrough on Mobile */

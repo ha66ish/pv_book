@@ -397,6 +397,10 @@ class BookReader {
       }
     }
 
+    // Hide floating mascot widget while reading
+    const happyWidget = document.getElementById('happy-voice-widget');
+    if (happyWidget) happyWidget.style.display = 'none';
+
     // Check first-time tutorial
     const tutorialSeen = localStorage.getItem('pv_reader_tutorial_seen');
     if (!tutorialSeen && this.tutorialOverlay) {
@@ -418,6 +422,9 @@ class BookReader {
     if (this.modal) {
       this.modal.classList.remove('active');
     }
+    // Restore floating mascot widget
+    const happyWidget = document.getElementById('happy-voice-widget');
+    if (happyWidget) happyWidget.style.display = '';
   }
 
   renderCurrentSpread() {
@@ -449,6 +456,13 @@ class BookReader {
         <div class="story-text-container guestbook-page-container">
           <div class="chapter-number">${page.chapter}</div>
           <h2 class="chapter-heading">${page.title}</h2>
+
+          <div class="mobile-comic-artwork-frame">
+            <img src="${page.image}" alt="${page.title}">
+            <div class="comic-caption-badge">
+              <i class="fa-solid fa-paintbrush"></i> ${page.imageCaption}
+            </div>
+          </div>
           
           <p class="story-paragraph guestbook-intro">
             Thank you for reading <em>Still Rooted</em>, Priya! 🌿<br>
@@ -491,6 +505,14 @@ class BookReader {
         <div class="story-text-container">
           <div class="chapter-number">${page.chapter}</div>
           <h2 class="chapter-heading">${page.title}</h2>
+
+          <div class="mobile-comic-artwork-frame">
+            <img src="${page.image}" alt="${page.title}">
+            <div class="comic-caption-badge">
+              <i class="fa-solid fa-paintbrush"></i> ${page.imageCaption}
+            </div>
+          </div>
+
           <div class="story-body-text">
             ${page.content}
           </div>

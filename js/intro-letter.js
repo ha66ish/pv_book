@@ -87,19 +87,25 @@ class IntroLetterManager {
   }
 
   checkAndShow() {
+    const shownOnce = localStorage.getItem('pv_intro_shown_once');
     const dontRepeat = localStorage.getItem(this.STORAGE_KEY);
-    if (dontRepeat !== 'true') {
-      this.open(false);
+    if (shownOnce === 'true' || dontRepeat === 'true') {
+      return; // Never auto-pop after initial view
     }
+    this.open(false);
   }
 
   open(isManual = false) {
     if (!this.modal) return;
     this.isOpen = true;
 
+    // Mark as shown once so it will never pop up again automatically on future logins
+    localStorage.setItem('pv_intro_shown_once', 'true');
+    localStorage.setItem(this.STORAGE_KEY, 'true');
+
     // If opening manually, load the current preference state
     if (this.dontRepeatCheck) {
-      this.dontRepeatCheck.checked = (localStorage.getItem(this.STORAGE_KEY) === 'true');
+      this.dontRepeatCheck.checked = true;
     }
 
     // Reset closing classes if any
@@ -120,13 +126,11 @@ class IntroLetterManager {
   close() {
     if (!this.modal || !this.isOpen) return;
 
-    // Save "Don't repeat" preference
+    // Permanently remember that the letter has been viewed/dismissed
+    localStorage.setItem('pv_intro_shown_once', 'true');
+    localStorage.setItem(this.STORAGE_KEY, 'true');
     if (this.dontRepeatCheck) {
-      if (this.dontRepeatCheck.checked) {
-        localStorage.setItem(this.STORAGE_KEY, 'true');
-      } else {
-        localStorage.removeItem(this.STORAGE_KEY);
-      }
+      this.dontRepeatCheck.checked = true;
     }
 
     // Play subtle smooth fold/dismiss
