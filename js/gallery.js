@@ -224,6 +224,44 @@ class DriveGallery {
      STATE & DATA LOADING
      -------------------------------------------------------------------------- */
   loadState() {
+    const DEFAULT_VIDEOS = [
+      {
+        title: "Pretty Little Baby Song By 😎",
+        url: "https://drive.google.com/file/d/12YvHUZqxsfQy3pZcTg4zrPiNKffHWhlF/view?usp=drive_link",
+        desc: "Varshini's charming rendition of Pretty Little Baby! 🎵✨",
+        cover: "",
+        date: "Special Memory"
+      },
+      {
+        title: "Alagiya Singer Yaru? 🎤",
+        url: "https://drive.google.com/file/d/1fBTzehrjVj7F_o4l8AZk-I5dz1ykIZJs/view?usp=sharing",
+        desc: "Guess who the sweetest singer is? Varshini in the spotlight! 🎶",
+        cover: "",
+        date: "Music Memory"
+      },
+      {
+        title: "Who Is Priyavarshini ✨",
+        url: "https://drive.google.com/file/d/1-g2iPFMXen-qt3F92zBoLLtWhnneJm_z/view?usp=sharing",
+        desc: "A special spotlight celebrating everything wonderful about Priyavarshini.",
+        cover: "",
+        date: "Spotlight"
+      },
+      {
+        title: "Oodha Poo Song 🌸",
+        url: "https://drive.google.com/file/d/1zIkhZBtRVJq_UV07XeYyMRKtMp58uZ6g/view?usp=sharing",
+        desc: "A beautiful melody captured with sweet smiles and joyful vibes.",
+        cover: "",
+        date: "Classic Tune"
+      },
+      {
+        title: "Ooh Rose Of Germany 🌹",
+        url: "https://drive.google.com/file/d/1g2UVTVXVJuMBucuBn6himXXqeA-Ri34N/view?usp=sharing",
+        desc: "Classic performance and graceful stage presence by Varshini.",
+        cover: "",
+        date: "Stage Spotlight"
+      }
+    ];
+
     const savedPrimary = localStorage.getItem(this.primaryStorageKey) || '';
     if (this.primaryUrlInput && savedPrimary) {
       this.primaryUrlInput.value = savedPrimary;
@@ -235,19 +273,15 @@ class DriveGallery {
       this.videos = [];
     }
 
-    // If videos list is empty, initialize with the saved primary clip or default stage spotlight
-    if (this.videos.length === 0) {
-      const initialUrl = savedPrimary || 'https://drive.google.com/file/d/1Gq_stage_memory/view';
-      this.videos = [
-        {
-          title: "Varshini's Stage Spotlight 🌟",
-          url: initialUrl,
-          desc: "A special stage moment captured with love & admiration for Priyavarshini.",
-          cover: "assets/images/stage_curtain_cover.jpg",
-          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        }
-      ];
+    // If empty or containing the old dummy placeholder, upgrade to the 5 real clips
+    const hasDummy = this.videos.some(v => v.url && v.url.includes('1Gq_stage_memory'));
+    if (this.videos.length === 0 || hasDummy) {
+      this.videos = DEFAULT_VIDEOS;
       localStorage.setItem(this.videosStorageKey, JSON.stringify(this.videos));
+      if (!savedPrimary || savedPrimary.includes('1Gq_stage_memory')) {
+        localStorage.setItem(this.primaryStorageKey, DEFAULT_VIDEOS[0].url);
+        if (this.primaryUrlInput) this.primaryUrlInput.value = DEFAULT_VIDEOS[0].url;
+      }
     }
 
     this.renderVideoCards();
