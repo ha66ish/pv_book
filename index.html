@@ -393,13 +393,22 @@
           </div>
 
           <div class="settings-group">
-            <label for="settings-voice-select">Default Live Voice</label>
+            <label for="settings-voice-select">Gemini Model Voice</label>
             <select id="settings-voice-select">
-              <option value="Aoede" selected>Aoede (Google Live Warm & Gentle - Default)</option>
+              <option value="Zephyr" selected>Zephyr (Google Live Bright & Expressive)</option>
+              <option value="Aoede">Aoede (Google Live Warm & Gentle)</option>
               <option value="Puck">Puck (Playful & Energetic)</option>
               <option value="Kore">Kore (Calm & Serene)</option>
               <option value="Charon">Charon (Deep & Soothing)</option>
               <option value="Fenrir">Fenrir (Lively & Confident)</option>
+            </select>
+          </div>
+
+          <div class="settings-group">
+            <label for="settings-language-select">Voice & Speech Language</label>
+            <select id="settings-language-select">
+              <option value="en-IN" selected>Indian English (En-IN)</option>
+              <option value="ta-IN">Tamil - தமிழ் (Ta-IN)</option>
             </select>
           </div>
 
@@ -409,8 +418,8 @@
           </div>
 
           <div class="settings-group">
-            <label>Voice Speed (<span id="rate-val-display">1.0x</span>)</label>
-            <input type="range" id="settings-voice-rate" min="0.7" max="1.4" step="0.05" value="1.0">
+            <label>Voice Pace & Speed (<span id="rate-val-display">1.0x</span>)</label>
+            <input type="range" id="settings-voice-rate" min="0.75" max="1.35" step="0.05" value="1.0">
           </div>
 
           <div class="settings-group">
@@ -627,12 +636,17 @@
           </div>
           <div class="happy-header-info">
             <h4>Happy AI Assistant</h4>
-            <span class="happy-status-line">Smart Companion • Aoede Live</span>
+            <span class="happy-status-line">Smart Companion • Zephyr Live</span>
           </div>
         </div>
-        <button class="happy-panel-close" id="happy-panel-close-btn">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <div class="happy-header-actions" style="display: flex; align-items: center; gap: 8px;">
+          <button id="happy-lang-toggle-btn" class="happy-lang-pill-btn" title="Toggle Language: Indian English / Tamil">
+            <span id="happy-lang-badge">🇮🇳 EN</span>
+          </button>
+          <button class="happy-panel-close" id="happy-panel-close-btn" title="Close conversation">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Audio Visualizer Wave (Speaks when active) -->

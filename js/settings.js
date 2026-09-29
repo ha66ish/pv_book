@@ -7,6 +7,7 @@ const SETTINGS_KEYS = {
   API_KEY: 'pv_gemini_api_key',
   MODEL: 'pv_gemini_model',
   VOICE_NAME: 'pv_voice_name',
+  LANGUAGE: 'pv_gemini_language',
   SYSTEM_PROMPT: 'pv_system_prompt',
   VOICE_RATE: 'pv_voice_rate',
   VOICE_PITCH: 'pv_voice_pitch'
@@ -14,7 +15,8 @@ const SETTINGS_KEYS = {
 
 const DEFAULT_SETTINGS = {
   model: 'gemini-3.1-live',
-  voiceName: 'Aoede',
+  voiceName: 'Zephyr',
+  language: 'en-IN',
   systemPrompt: `You are Happy, a witty, funny, cheerful, and loyal AI companion mascot created by Harish S. for Priyavarshini (affectionately called Priya or Varshini). 
 Harish S. is the author of the story 'Still Rooted' and built this entire web sanctuary for her.
 Your personality:
@@ -23,7 +25,7 @@ Your personality:
 - When she asks about Harish, speak playfully: mention he built this entire app to make her smile and thinks she is brilliant.
 - When she is having a rough day, cheer her up with humor and reminder of her resilience.
 - When she wants a joke, tell witty, funny, clean jokes.
-- Speak in the gentle, warm Aoede voice tone! Keep responses concise (2-3 sentences max).`,
+- Speak in the natural Gemini voice tone! Keep responses concise (2-3 sentences max).`,
   voiceRate: '1.0',
   voicePitch: '1.1'
 };
@@ -33,6 +35,7 @@ class SettingsManager {
     this.apiKeyInput = document.getElementById('settings-api-key');
     this.modelSelect = document.getElementById('settings-model-select');
     this.voiceSelect = document.getElementById('settings-voice-select');
+    this.langSelect = document.getElementById('settings-language-select');
     this.promptTextarea = document.getElementById('settings-system-prompt');
     this.rateSlider = document.getElementById('settings-voice-rate');
     this.pitchSlider = document.getElementById('settings-voice-pitch');
@@ -80,6 +83,7 @@ class SettingsManager {
       localStorage.setItem(SETTINGS_KEYS.MODEL, savedModel);
     }
     const savedVoice = localStorage.getItem(SETTINGS_KEYS.VOICE_NAME) || DEFAULT_SETTINGS.voiceName;
+    const savedLang = localStorage.getItem(SETTINGS_KEYS.LANGUAGE) || DEFAULT_SETTINGS.language;
     const savedPrompt = localStorage.getItem(SETTINGS_KEYS.SYSTEM_PROMPT) || DEFAULT_SETTINGS.systemPrompt;
     const savedRate = localStorage.getItem(SETTINGS_KEYS.VOICE_RATE) || DEFAULT_SETTINGS.voiceRate;
     const savedPitch = localStorage.getItem(SETTINGS_KEYS.VOICE_PITCH) || DEFAULT_SETTINGS.voicePitch;
@@ -87,6 +91,7 @@ class SettingsManager {
     if (this.apiKeyInput) this.apiKeyInput.value = savedKey;
     if (this.modelSelect) this.modelSelect.value = savedModel;
     if (this.voiceSelect) this.voiceSelect.value = savedVoice;
+    if (this.langSelect) this.langSelect.value = savedLang;
     if (this.promptTextarea) this.promptTextarea.value = savedPrompt;
     if (this.rateSlider) {
       this.rateSlider.value = savedRate;
@@ -102,6 +107,7 @@ class SettingsManager {
     const key = (this.apiKeyInput ? this.apiKeyInput.value : '').trim();
     const model = this.modelSelect ? this.modelSelect.value : DEFAULT_SETTINGS.model;
     const voice = this.voiceSelect ? this.voiceSelect.value : DEFAULT_SETTINGS.voiceName;
+    const lang = this.langSelect ? this.langSelect.value : DEFAULT_SETTINGS.language;
     const prompt = this.promptTextarea ? this.promptTextarea.value : DEFAULT_SETTINGS.systemPrompt;
     const rate = this.rateSlider ? this.rateSlider.value : DEFAULT_SETTINGS.voiceRate;
     const pitch = this.pitchSlider ? this.pitchSlider.value : DEFAULT_SETTINGS.voicePitch;
@@ -109,6 +115,7 @@ class SettingsManager {
     localStorage.setItem(SETTINGS_KEYS.API_KEY, key);
     localStorage.setItem(SETTINGS_KEYS.MODEL, model);
     localStorage.setItem(SETTINGS_KEYS.VOICE_NAME, voice);
+    localStorage.setItem(SETTINGS_KEYS.LANGUAGE, lang);
     localStorage.setItem(SETTINGS_KEYS.SYSTEM_PROMPT, prompt);
     localStorage.setItem(SETTINGS_KEYS.VOICE_RATE, rate);
     localStorage.setItem(SETTINGS_KEYS.VOICE_PITCH, pitch);
@@ -116,9 +123,15 @@ class SettingsManager {
 
     this.updateStatusDisplay();
 
+    // Notify Happy Agent of language & voice change
+    if (window.happyAgent && window.happyAgent.syncSettings) {
+      window.happyAgent.syncSettings();
+    }
+
     if (window.soundEngine) window.soundEngine.playHappyChirp();
     if (window.showToast) {
-      window.showToast(`Settings Saved! Active: ${model} (${voice} Voice) ✨`);
+      const langLabel = lang === 'ta-IN' ? 'Tamil' : 'Indian English';
+      window.showToast(`Settings Saved! Voice: ${voice} • ${langLabel} ✨`);
     }
   }
 
@@ -126,11 +139,12 @@ class SettingsManager {
     const key = localStorage.getItem(SETTINGS_KEYS.API_KEY);
     const model = this.getModel();
     const voice = this.getVoiceName();
+    const lang = this.getLanguage() === 'ta-IN' ? 'Tamil' : 'Indian English';
 
     if (this.statusDot && this.statusText) {
       if (key && key.length > 10) {
         this.statusDot.className = 'status-dot active';
-        this.statusText.textContent = `Connected: ${model} • Voice: ${voice} (Ready)`;
+        this.statusText.textContent = `Connected: ${model} • Voice: ${voice} (${lang})`;
         this.statusText.style.color = '#2ed573';
       } else {
         this.statusDot.className = 'status-dot inactive';
@@ -248,6 +262,24 @@ class SettingsManager {
       rate: parseFloat(localStorage.getItem(SETTINGS_KEYS.VOICE_RATE) || DEFAULT_SETTINGS.voiceRate),
       pitch: parseFloat(localStorage.getItem(SETTINGS_KEYS.VOICE_PITCH) || DEFAULT_SETTINGS.voicePitch)
     };
+  }
+
+  getVoicePace() {
+    return parseFloat(localStorage.getItem(SETTINGS_KEYS.VOICE_RATE) || DEFAULT_SETTINGS.voiceRate);
+  }
+
+  getLanguage() {
+    return localStorage.getItem(SETTINGS_KEYS.LANGUAGE) || DEFAULT_SETTINGS.language;
+  }
+
+  setLanguage(lang) {
+    if (lang !== 'en-IN' && lang !== 'ta-IN') lang = 'en-IN';
+    localStorage.setItem(SETTINGS_KEYS.LANGUAGE, lang);
+    if (this.langSelect) this.langSelect.value = lang;
+    this.updateStatusDisplay();
+    if (window.happyAgent && window.happyAgent.syncSettings) {
+      window.happyAgent.syncSettings();
+    }
   }
 }
 

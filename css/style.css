@@ -1699,6 +1699,26 @@ html, body {
   box-shadow: 0 0 6px #2ed573;
 }
 
+.happy-lang-pill-btn {
+  background: #ffffff;
+  border: 1px solid rgba(217, 107, 130, 0.4);
+  color: var(--rose-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: var(--transition-smooth);
+}
+
+.happy-lang-pill-btn:hover {
+  background: var(--rose-primary);
+  color: #ffffff;
+  border-color: var(--rose-primary);
+  transform: scale(1.05);
+}
+
 .happy-panel-close {
   background: none;
   border: none;

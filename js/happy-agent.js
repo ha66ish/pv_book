@@ -1,6 +1,7 @@
 /* ==========================================================================
    AI VOICE AGENT: "HAPPY"
-   Continuous Live Speak-to-Speech Companion with Instant Cut-Off & Multi-Model Failover
+   Gemini Neural Model Voice Engine (Zephyr / Aoede / Puck / Charon)
+   Native Web Audio API (No Browser SpeechSynthesis) + Tamil & Indian English
    ========================================================================== */
 
 class HappyVoiceAgent {
@@ -16,18 +17,23 @@ class HappyVoiceAgent {
     this.micBtn = document.getElementById('happy-mic-btn');
     this.visualizer = document.getElementById('happy-audio-visualizer');
     this.statusLine = document.querySelector('.happy-status-line');
+    this.langToggleBtn = document.getElementById('happy-lang-toggle-btn');
+    this.langBadge = document.getElementById('happy-lang-badge');
 
-    // Live Interaction & State Management
-    this.liveVoiceMode = false;       // When true: continuous live speak-to-speech loop
-    this.isListening = false;         // Microphone actively streaming
-    this.isSpeaking = false;          // Speech synthesis actively speaking
-    this.isOpen = false;              // Dialogue panel open state
-    this.recognition = null;          // SpeechRecognition instance
-    this.chatHistory = [];            // Conversation transcript
-    this.activeAbortController = null;// In-flight API call canceller
-    this.currentThinkingBubble = null;// DOM reference to active thinking indicator
-    this.autoRestartTimer = null;     // Timer to restart mic after agent speech ends
-    this.currentUtterance = null;     // Chrome GC protection
+    // Live Interaction & State
+    this.liveVoiceMode = false;         // Hands-free continuous speak-to-speech loop
+    this.isListening = false;           // Mic active
+    this.isSpeaking = false;            // Gemini model audio active
+    this.isOpen = false;                // Panel open
+    this.recognition = null;            // SpeechRecognition
+    this.chatHistory = [];              // Conversation history
+    this.activeAbortController = null;  // In-flight network cancel
+    this.currentThinkingBubble = null;  // Thinking DOM element
+    this.autoRestartTimer = null;       // Restart listening timer
+    
+    // Web Audio Context for Gemini Neural Audio (No browser voice)
+    this.audioCtx = null;
+    this.currentAudioSource = null;
 
     this.init();
   }
@@ -40,11 +46,19 @@ class HappyVoiceAgent {
       });
     }
 
-    // Close button: instant cut-off and close panel
+    // Close button: instant cut-off
     if (this.closeBtn) {
       this.closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.closePanel();
+      });
+    }
+
+    // Quick Language Toggle Button in panel header
+    if (this.langToggleBtn) {
+      this.langToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleLanguage();
       });
     }
 
@@ -77,16 +91,49 @@ class HappyVoiceAgent {
       this.micBtn.addEventListener('click', () => this.toggleLiveVoice());
     }
 
-    // Pre-warm SpeechSynthesis voices for zero-latency audio playback
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-      };
-    }
+    // Sync initial language & voice settings
+    this.syncSettings();
 
     // Initial greeting message
-    this.addMessage("agent", "Hi Priya! 👋 I'm Happy AI Assistant, your smart companion created by Harish S. Whenever you need a joke, a quick laugh, or want me to open your story, just tap the mic to speak live or type below!");
+    const isTamil = (window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN') === 'ta-IN';
+    const initialGreeting = isTamil 
+      ? "வணக்கம் பிரியா! 👋 நான் ஹேப்பி, Harish S. உருவாக்கிய உங்கள் AI துணைவன். என்னோடு பேச மைக் பட்டனைத் தட்டுங்கள்!"
+      : "Hi Priya! 👋 I'm Happy, your smart companion with Gemini model voice created by Harish S. Tap the mic to speak live or type below!";
+
+    this.addMessage("agent", initialGreeting);
+  }
+
+  /* --------------------------------------------------------------------------
+     SYNC SETTINGS & LANGUAGE MAPPING
+     -------------------------------------------------------------------------- */
+  syncSettings() {
+    const lang = window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN';
+    const voice = window.settingsManager ? window.settingsManager.getVoiceName() : 'Zephyr';
+
+    if (this.langBadge) {
+      this.langBadge.textContent = lang === 'ta-IN' ? '🇮🇳 தமிழ்' : '🇮🇳 EN';
+    }
+
+    if (this.recognition) {
+      this.recognition.lang = lang; // 'ta-IN' or 'en-IN'
+    }
+
+    if (this.statusLine && !this.isListening && !this.isSpeaking) {
+      this.statusLine.innerHTML = `● Smart Companion • ${voice} Voice`;
+    }
+  }
+
+  toggleLanguage() {
+    const current = window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN';
+    const next = current === 'ta-IN' ? 'en-IN' : 'ta-IN';
+    if (window.settingsManager) {
+      window.settingsManager.setLanguage(next);
+    }
+    this.syncSettings();
+    if (window.showToast) {
+      const label = next === 'ta-IN' ? 'Tamil (தமிழ்)' : 'Indian English';
+      window.showToast(`Switched language to ${label}! 🗣️`);
+    }
   }
 
   /* --------------------------------------------------------------------------
@@ -107,7 +154,7 @@ class HappyVoiceAgent {
     if (this.greetingBubble) this.greetingBubble.style.display = 'none';
     if (window.soundEngine) window.soundEngine.playHappyChirp();
 
-    // Trigger cute robo wave animation
+    // Trigger robo wave animation
     const wave = document.getElementById('robo-wave-indicator');
     if (wave) {
       wave.classList.remove('waving');
@@ -124,25 +171,31 @@ class HappyVoiceAgent {
     if (this.panel) {
       this.panel.classList.remove('open');
     }
-    // IMMEDIATELY cut off any active voice, listening, or thinking
+    // Hard cut-off on close
     this.cutOffAllInteraction('panel_closed');
   }
 
   /* --------------------------------------------------------------------------
      IMMEDIATE CUT-OFF / CANCELLATION
-     Instantly terminates microphone, speech playback, network calls, and thinking
+     Silences model audio instantly, aborts mic stream and network requests
      -------------------------------------------------------------------------- */
   cutOffAllInteraction(reason = 'user') {
-    console.log(`[Happy AI] ⏹️ Cut-off executed immediately (${reason})`);
+    console.log(`[Happy AI] ⏹️ Immediate cut-off (${reason})`);
 
-    // 1. Instantly silence Web Speech Synthesis playback
-    if ('speechSynthesis' in window) {
+    // 1. Instantly silence Gemini model audio playback
+    if (this.currentAudioSource) {
       try {
-        window.speechSynthesis.cancel();
+        this.currentAudioSource.stop(0);
+        this.currentAudioSource.disconnect();
+      } catch (e) {}
+      this.currentAudioSource = null;
+    }
+    if (this.audioCtx && this.audioCtx.state === 'running') {
+      try {
+        this.audioCtx.suspend();
       } catch (e) {}
     }
     this.isSpeaking = false;
-    this.currentUtterance = null;
 
     // 2. Clear any pending auto-restart timers
     if (this.autoRestartTimer) {
@@ -153,12 +206,12 @@ class HappyVoiceAgent {
     // 3. Instantly abort microphone speech recognition
     if (this.recognition) {
       try {
-        this.recognition.abort(); // abort() kills audio stream immediately without waiting
+        this.recognition.abort(); // abort() kills mic stream instantly
       } catch (e) {}
     }
     this.isListening = false;
 
-    // 4. Instantly abort any in-flight Gemini API fetch
+    // 4. Instantly abort in-flight Gemini API fetch
     if (this.activeAbortController) {
       try {
         this.activeAbortController.abort();
@@ -166,7 +219,7 @@ class HappyVoiceAgent {
       this.activeAbortController = null;
     }
 
-    // 5. Instantly remove any "Happy is thinking..." bubble from UI
+    // 5. Remove thinking bubble immediately
     if (this.currentThinkingBubble) {
       try {
         this.currentThinkingBubble.remove();
@@ -205,7 +258,10 @@ class HappyVoiceAgent {
     this.recognition = new SpeechRecognition();
     this.recognition.continuous = false;
     this.recognition.interimResults = false;
-    this.recognition.lang = 'en-US';
+    
+    // Set language from settings (ta-IN or en-IN)
+    const lang = window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN';
+    this.recognition.lang = lang;
 
     this.recognition.onstart = () => {
       this.isListening = true;
@@ -223,16 +279,14 @@ class HappyVoiceAgent {
         console.log('[Happy AI] Speech transcript recognized:', transcript);
         if (this.inputField) this.inputField.value = transcript;
 
-        // Stop listening temporarily while processing and speaking reply
+        // Stop listening temporarily while agent processes and speaks reply
         this.stopListeningOnly();
         this.sendMessage(transcript.trim());
       }
     };
 
     this.recognition.onerror = (event) => {
-      console.warn('[Happy AI] Speech recognition status:', event.error);
-      
-      // If aborted by user, do not auto-restart
+      console.warn('[Happy AI] Speech recognition error:', event.error);
       if (event.error === 'aborted') {
         this.isListening = false;
         return;
@@ -241,7 +295,6 @@ class HappyVoiceAgent {
       this.isListening = false;
       if (this.micBtn) this.micBtn.classList.remove('listening');
 
-      // If in continuous live mode and user went silent (no-speech), restart gently
       if (this.liveVoiceMode && this.isOpen && !this.isSpeaking) {
         this.scheduleRestartListening(700);
       } else {
@@ -253,7 +306,6 @@ class HappyVoiceAgent {
       this.isListening = false;
       if (this.micBtn) this.micBtn.classList.remove('listening');
 
-      // If live mode is still active, agent isn't speaking, and panel is open, keep listening
       if (this.liveVoiceMode && this.isOpen && !this.isSpeaking && !this.currentThinkingBubble) {
         this.scheduleRestartListening(500);
       } else if (!this.liveVoiceMode) {
@@ -262,9 +314,6 @@ class HappyVoiceAgent {
     };
   }
 
-  /* --------------------------------------------------------------------------
-     LIVE SPEAK-TO-SPEECH CONTROLS
-     -------------------------------------------------------------------------- */
   toggleLiveVoice() {
     if (!this.recognition) {
       if (window.showToast) window.showToast('Voice input requires Chrome or Edge browser.');
@@ -272,17 +321,17 @@ class HappyVoiceAgent {
     }
 
     if (this.liveVoiceMode) {
-      // User tapped mic button to turn it OFF -> Instant Cut-Off
+      // Turn OFF -> Immediate cut off
       this.liveVoiceMode = false;
       this.cutOffAllInteraction('mic_turned_off');
       if (window.showToast) window.showToast('Live voice turned off 🔇');
     } else {
-      // User tapped mic button to turn it ON
+      // Turn ON
       this.cutOffAllInteraction('fresh_mic_start');
       this.liveVoiceMode = true;
       if (this.micBtn) {
         this.micBtn.classList.add('live-active');
-        this.micBtn.title = "Live Speak-to-Speech is ON. Click to stop.";
+        this.micBtn.title = "Live Speak-to-Speech ON. Click to stop.";
       }
       this.updateStatusDisplay('listening');
       this.startListening();
@@ -293,9 +342,10 @@ class HappyVoiceAgent {
   startListening() {
     if (!this.recognition || this.isListening || this.isSpeaking) return;
     try {
+      const lang = window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN';
+      this.recognition.lang = lang;
       this.recognition.start();
     } catch (e) {
-      // Recognition may already be starting
       console.warn('[Happy AI] recognition.start caught:', e);
     }
   }
@@ -322,7 +372,7 @@ class HappyVoiceAgent {
   }
 
   /* --------------------------------------------------------------------------
-     MESSAGING & GEMINI MULTI-MODEL FALLBACK ENGINE
+     MESSAGING & GEMINI PIPELINE
      -------------------------------------------------------------------------- */
   handleSendMessage() {
     if (!this.inputField) return;
@@ -345,11 +395,11 @@ class HappyVoiceAgent {
 
       const speakBtn = document.createElement('button');
       speakBtn.className = 'bubble-speak-btn';
-      speakBtn.title = 'Replay Happy voice';
+      speakBtn.title = 'Replay Gemini model voice';
       speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
       speakBtn.onclick = (e) => {
         e.stopPropagation();
-        this.speakText(text);
+        this.generateAndPlayGeminiVoice(text);
       };
       bubble.appendChild(speakBtn);
     } else {
@@ -363,10 +413,9 @@ class HappyVoiceAgent {
   }
 
   async sendMessage(userText) {
-    // If speaking, interrupt immediately
+    // If speaking, cut off immediately
     if (this.isSpeaking) {
-      window.speechSynthesis.cancel();
-      this.isSpeaking = false;
+      this.cutOffAllInteraction('new_message_interrupt');
     }
 
     this.addMessage("user", userText);
@@ -385,284 +434,340 @@ class HappyVoiceAgent {
     if (lower.includes('read') || lower.includes('story') || lower.includes('book')) {
       if (this.currentThinkingBubble) this.currentThinkingBubble.remove();
       this.currentThinkingBubble = null;
-      const reply = "Opening your story book 'Still Rooted' right now, Priya! Let me take you to Chapter 1! 📖✨";
+      const isTamil = (window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN') === 'ta-IN';
+      const reply = isTamil
+        ? "உங்கள் 'Still Rooted' கதையை இப்போதே திறக்கிறேன், பிரியா! அத்தியாயம் 1-க்கு போகலாம்! 📖✨"
+        : "Opening your story book 'Still Rooted' right now, Priya! Let me take you to Chapter 1! 📖✨";
       this.addMessage("agent", reply);
-      this.speakText(reply);
+      this.generateAndPlayGeminiVoice(reply);
       if (window.bookReader) {
         setTimeout(() => window.bookReader.openBook('main', 0), 1000);
       }
       return;
     }
 
-    // 2. Settings & Keys
     const apiKey = window.settingsManager ? window.settingsManager.getApiKey() : '';
-    const voiceName = window.settingsManager ? window.settingsManager.getVoiceName() : 'Aoede';
+    const lang = window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN';
+    const voiceName = window.settingsManager ? window.settingsManager.getVoiceName() : 'Zephyr';
 
     if (!apiKey || apiKey.length < 8) {
       if (this.currentThinkingBubble) this.currentThinkingBubble.remove();
       this.currentThinkingBubble = null;
-      const fallbackReply = this.getSmartFallbackResponse(userText);
+      const fallbackReply = this.getSmartFallbackResponse(userText, lang);
       this.addMessage("agent", fallbackReply);
-      this.speakText(fallbackReply);
+      this.generateAndPlayGeminiVoice(fallbackReply);
       return;
     }
 
-    // 3. Multi-Model Failover Order (Handles 503 Service Unavailable / High Demand)
-    const selectedModel = window.settingsManager ? window.settingsManager.getModel() : 'gemini-3.1-live';
-    
-    // Model candidate cascade: selected first, then guaranteed low-latency high-availability models
-    const candidateModels = [];
-    if (selectedModel.includes('3.8')) {
-      candidateModels.push('gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite');
-    } else {
-      candidateModels.push('gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.8-flash');
-    }
-    // Deduplicate
-    const uniqueCandidates = [...new Set(candidateModels)];
+    // Multi-model text generation cascade (ultra-fast, zero-503 models)
+    const textModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
 
-    const promptInstruction = `SYSTEM INSTRUCTION: You are Happy, a cheerful, witty, warm AI companion created by Harish S. for Priyavarshini (Priya). Speak with warm ${voiceName} tone. Keep responses conversational, concise, and helpful (1 to 3 short sentences max). Never be overly dramatic or romantic; be a great, funny, loyal friend.\n\nUSER MESSAGE: ${userText}`;
+    let languageDirective = "";
+    if (lang === 'ta-IN') {
+      languageDirective = "IMPORTANT: You MUST respond in warm, natural conversational Tamil (or Tanglish that sounds completely natural when spoken aloud). Example: 'வணக்கம் பிரியா! நான் ஹேப்பி. உங்களுக்கு என்ன உதவி வேணும்?'. Keep it concise and witty (1 to 2 short sentences).";
+    } else {
+      languageDirective = "IMPORTANT: You MUST respond in natural, friendly Indian English. Keep responses witty, warm, concise, and helpful (1 to 3 short sentences max). Never be overly dramatic; be a great, funny, loyal companion.";
+    }
+
+    const promptInstruction = `SYSTEM INSTRUCTION: You are Happy, a cheerful, witty AI companion created by Harish S. for Priyavarshini (Priya). Speak with warm ${voiceName} tone. ${languageDirective}\n\nUSER MESSAGE: ${userText}`;
 
     const payload = {
       contents: [{ role: 'user', parts: [{ text: promptInstruction }] }],
-      generationConfig: { temperature: 0.75, maxOutputTokens: 250 }
+      generationConfig: { temperature: 0.75, maxOutputTokens: 220 }
     };
 
-    let replySuccess = false;
+    let replyText = "";
     this.activeAbortController = new AbortController();
 
-    // Iterate through model candidates until one succeeds
-    for (const model of uniqueCandidates) {
-      if (!this.currentThinkingBubble) {
-        // User closed panel or toggled mic off mid-request
-        return;
-      }
+    // Query text generation
+    for (const model of textModels) {
+      if (!this.currentThinkingBubble) return;
 
       try {
-        console.log(`[Happy AI] Querying Gemini model: ${model}...`);
-        
-        // Timeout per model attempt: 5.5s
-        const modelAbort = new AbortController();
-        const timeoutId = setTimeout(() => modelAbort.abort(), 5500);
+        const timeoutAbort = new AbortController();
+        const timeoutId = setTimeout(() => timeoutAbort.abort(), 6000);
 
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
-          signal: modelAbort.signal
+          signal: timeoutAbort.signal
         });
 
         clearTimeout(timeoutId);
         const data = await res.json();
 
         if (res.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
-          const replyText = data.candidates[0].content.parts[0].text.trim();
-          
-          if (this.currentThinkingBubble) {
-            this.currentThinkingBubble.remove();
-            this.currentThinkingBubble = null;
-          }
-          this.activeAbortController = null;
-
-          this.addMessage("agent", replyText);
-          this.speakText(replyText);
-          replySuccess = true;
-          break; // Succeeded!
-        } else {
-          const errCode = (data.error && data.error.code) || res.status;
-          console.warn(`[Happy AI] Model ${model} returned error status ${errCode}:`, data.error?.message);
-          // Continue to next candidate model seamlessly!
+          replyText = data.candidates[0].content.parts[0].text.trim();
+          break;
         }
       } catch (err) {
-        console.warn(`[Happy AI] Model ${model} network error:`, err.message);
-        // Continue to next candidate model
+        console.warn(`[Happy AI] Text generation failed on ${model}:`, err.message);
       }
     }
 
-    // If all online models were busy (503/429) or unreachable
-    if (!replySuccess) {
-      if (this.currentThinkingBubble) {
-        this.currentThinkingBubble.remove();
-        this.currentThinkingBubble = null;
-      }
-      this.activeAbortController = null;
+    if (!replyText) {
+      replyText = this.getSmartFallbackResponse(userText, lang);
+    }
 
-      const fallbackReply = this.getSmartFallbackResponse(userText);
-      this.addMessage("agent", fallbackReply);
-      this.speakText(fallbackReply);
+    if (this.currentThinkingBubble) {
+      this.currentThinkingBubble.remove();
+      this.currentThinkingBubble = null;
+    }
+    this.activeAbortController = null;
+
+    this.addMessage("agent", replyText);
+
+    // Speak using Gemini's native model voice!
+    await this.generateAndPlayGeminiVoice(replyText);
+  }
+
+  /* --------------------------------------------------------------------------
+     GEMINI NEURAL MODEL AUDIO GENERATION & WEB AUDIO PLAYBACK
+     (Uses Gemini TTS: gemini-3.8-flash-lite-tts / gemini-3.8-flash-tts / Zephyr)
+     -------------------------------------------------------------------------- */
+  async generateAndPlayGeminiVoice(text) {
+    const apiKey = window.settingsManager ? window.settingsManager.getApiKey() : '';
+    const voiceName = window.settingsManager ? window.settingsManager.getVoiceName() : 'Zephyr';
+    const pace = window.settingsManager ? window.settingsManager.getVoicePace() : 1.0;
+
+    // If no API key is provided, we inform the user to configure the key in settings
+    if (!apiKey || apiKey.length < 8) {
+      console.warn('[Happy AI] No Gemini API Key configured for neural voice.');
+      if (window.showToast) window.showToast('Add Gemini API Key in Settings for real Zephyr model voice! 🔑');
+      return;
+    }
+
+    // Clean text to avoid special character errors in TTS
+    const cleanText = text.replace(/[*#_~`]/g, '').replace(/https?:\/\/\S+/g, '').trim();
+    if (!cleanText) return;
+
+    // Available TTS models in order of speed and capability
+    const ttsModels = [
+      'gemini-3.8-flash-lite-tts',
+      'gemini-3.8-flash-tts',
+      'gemini-3.1-flash-tts-preview',
+      'gemini-2.5-pro-preview-tts'
+    ];
+
+    const ttsPayload = {
+      contents: [
+        {
+          parts: [{ text: cleanText }]
+        }
+      ],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: voiceName // "Zephyr", "Aoede", "Puck", "Charon", etc.
+            }
+          }
+        }
+      }
+    };
+
+    let audioPlayed = false;
+
+    for (const ttsModel of ttsModels) {
+      if (!this.isOpen && !this.liveVoiceMode) return;
+
+      try {
+        console.log(`[Happy AI] Synthesizing voice with model: ${ttsModel} (${voiceName} voice)...`);
+        
+        const ttsAbort = new AbortController();
+        const timeoutId = setTimeout(() => ttsAbort.abort(), 7000);
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${ttsModel}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ttsPayload),
+          signal: ttsAbort.signal
+        });
+
+        clearTimeout(timeoutId);
+        const data = await res.json();
+
+        if (res.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
+          const parts = data.candidates[0].content.parts;
+          const audioPart = parts.find(p => p.inlineData && p.inlineData.data);
+          
+          if (audioPart) {
+            const base64Audio = audioPart.inlineData.data;
+            const mimeType = audioPart.inlineData.mimeType || 'audio/L16;codec=pcm;rate=24000';
+            
+            console.log(`[Happy AI] 🎙️ Gemini audio received (${mimeType}). Playing via Web Audio API...`);
+            await this.playGeminiAudio(base64Audio, mimeType, pace);
+            audioPlayed = true;
+            break;
+          }
+        } else {
+          console.warn(`[Happy AI] TTS model ${ttsModel} status:`, data.error?.message || res.status);
+        }
+      } catch (err) {
+        console.warn(`[Happy AI] TTS model ${ttsModel} failed:`, err.message);
+      }
+    }
+
+    if (!audioPlayed) {
+      console.warn('[Happy AI] Could not generate audio from Gemini TTS models.');
+      // If in continuous live mode and audio failed to play, auto-listen again
+      if (this.liveVoiceMode && this.isOpen) {
+        this.scheduleRestartListening(400);
+      }
     }
   }
 
   /* --------------------------------------------------------------------------
-     SMART CONVERSATIONAL FALLBACK GENERATOR
+     WEB AUDIO API PLAYER: Decodes 24kHz PCM or WAV & plays with pace mapping
      -------------------------------------------------------------------------- */
-  getSmartFallbackResponse(text) {
-    const lower = text.toLowerCase();
+  playGeminiAudio(base64Data, mimeType = 'audio/L16;codec=pcm;rate=24000', pace = 1.0) {
+    return new Promise(async (resolve) => {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!this.audioCtx || this.audioCtx.state === 'closed') {
+          this.audioCtx = new AudioContextClass();
+        }
+        if (this.audioCtx.state === 'suspended') {
+          await this.audioCtx.resume();
+        }
 
-    if (lower.includes('tamil') || lower.includes('vanakkam')) {
-      return "Vanakkam Priya! Eppadi irukkeenga? Harish S. ungalukaaga intha sanctuary-ah create pannirukaaru! Ungalukku eppovum smile thara naanum ready! 🌸✨";
+        // Convert base64 to binary byte array
+        const binaryString = atob(base64Data);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        let audioBuffer;
+
+        // If raw PCM (16-bit little-endian, usually 24000Hz)
+        if (mimeType.includes('pcm') || mimeType.includes('L16')) {
+          let sampleRate = 24000;
+          const rateMatch = mimeType.match(/rate=(\d+)/);
+          if (rateMatch && rateMatch[1]) {
+            sampleRate = parseInt(rateMatch[1], 10);
+          }
+
+          const int16Array = new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2));
+          audioBuffer = this.audioCtx.createBuffer(1, int16Array.length, sampleRate);
+          const channelData = audioBuffer.getChannelData(0);
+          for (let i = 0; i < int16Array.length; i++) {
+            channelData[i] = int16Array[i] / 32768.0; // Float32 conversion (-1.0 to 1.0)
+          }
+        } else {
+          // Encoded container (WAV, MP3, etc.)
+          audioBuffer = await this.audioCtx.decodeAudioData(bytes.buffer.slice(0));
+        }
+
+        // Create audio node
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        
+        // Apply voice pace directly to AudioBufferSourceNode!
+        source.playbackRate.value = Math.max(0.75, Math.min(1.35, pace));
+        source.connect(this.audioCtx.destination);
+
+        this.currentAudioSource = source;
+        this.isSpeaking = true;
+        if (this.visualizer) this.visualizer.classList.add('active');
+        this.updateStatusDisplay('speaking');
+
+        source.onended = () => {
+          this.isSpeaking = false;
+          this.currentAudioSource = null;
+          if (this.visualizer) this.visualizer.classList.remove('active');
+
+          // Live speak-to-speech loop: restart listening after audio ends!
+          if (this.liveVoiceMode && this.isOpen) {
+            this.updateStatusDisplay('listening');
+            this.scheduleRestartListening(400); // 400ms pause prevents echo
+          } else {
+            this.updateStatusDisplay('idle');
+          }
+          resolve();
+        };
+
+        source.start(0);
+
+      } catch (err) {
+        console.error('[Happy AI] playGeminiAudio playback error:', err);
+        this.isSpeaking = false;
+        this.currentAudioSource = null;
+        if (this.visualizer) this.visualizer.classList.remove('active');
+        resolve();
+      }
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     SMART CONVERSATIONAL FALLBACK (TAMIL & ENGLISH)
+     -------------------------------------------------------------------------- */
+  getSmartFallbackResponse(text, lang = 'en-IN') {
+    const lower = text.toLowerCase();
+    const isTamil = lang === 'ta-IN' || lower.includes('tamil') || lower.includes('vanakkam');
+
+    if (isTamil) {
+      if (lower.includes('vanakkam') || lower.includes('hello') || lower.includes('hi')) {
+        return "வணக்கம் பிரியா! நலமாக இருக்கிறீர்களா? Harish S. உருவாக்கிய இந்த அழகான sanctuary-க்கு உங்களை வரவேற்கிறேன்! 🌸✨";
+      }
+      if (lower.includes('joke') || lower.includes('funny') || lower.includes('laugh') || lower.includes('சிரி')) {
+        return "ஏன் மரங்கள் எப்பவும் புத்திசாலியா இருக்கு தெரியுமா பிரியா? ஏன்னா அவைகளுக்கு ஸ்ட்ராங்கான 'Roots' இருக்கு! 'Still Rooted' போல! 😄🌿";
+      }
+      if (lower.includes('hard day') || lower.includes('tired') || lower.includes('கஷ்டம்')) {
+        return "கவலைப்படாதீங்க பிரியா! ஒரு மெதுவான மூச்சு விடுங்கள். எப்பேர்ப்பட்ட புயலையும் தாங்கும் சக்தி உங்களுக்கு இருக்கு! 🌿💪";
+      }
+      if (lower.includes('harish')) {
+        return "Harish S. உங்களை சிரிக்க வைக்கவும், உங்கள் முகத்தில் எப்போதும் புன்னகை இருக்கவும்தான் இந்த செயலியை உருவாக்கினார்! 😊";
+      }
+      return "மிக அருமையான சிந்தனை, பிரியா! உங்கள் நம்பிக்கை என்றும் உங்களுடன் இருக்கும். நான் எப்போதும் உங்களுக்கு துணையாக இருப்பேன்! 🌟";
     }
 
-    if (lower.includes('hard day') || lower.includes('tired') || lower.includes('exhausted') || lower.includes('sad') || lower.includes('stressed')) {
-      return "Take a slow, deep breath, Priya! You've got this, and you don't have to carry the whole world on your shoulders today. Just like the resilient tree in 'Still Rooted', shake off the stress—your roots run deep! 🌿";
+    // Indian English
+    if (lower.includes('hard day') || lower.includes('tired') || lower.includes('exhausted') || lower.includes('stressed')) {
+      return "Take a slow, deep breath, Priya! You've got this, and you don't have to carry the whole world on your shoulders today. Just like in 'Still Rooted', shake off the stress—your roots run deep! 🌿";
     }
 
     if (lower.includes('joke') || lower.includes('funny') || lower.includes('laugh')) {
       const jokes = [
         "Why did the tree go to college? Because it wanted to branch out into greater things, just like you, Priya! 🌿😄",
         "What did one storm cloud say to the lightning? 'You're looking shockingly radiant today!' ⚡✨",
-        "Why do programmers prefer dark mode? Because light attracts bugs! (Harish probably knows all about that one!) 😂💻",
-        "Why was the book always calm? Because it knew how to keep things well-grounded! 📖😊"
+        "Why do programmers prefer dark mode? Because light attracts bugs! (Harish knows all about that one!) 😂💻"
       ];
       return jokes[Math.floor(Math.random() * jokes.length)];
     }
 
-    if (lower.includes('pep-talk') || lower.includes('inspire') || lower.includes('strength') || lower.includes('motivat')) {
-      return "Listen to me, Priyavarshini! You have survived 100% of your hardest days so far. You are brilliant, unstoppable, and your roots run deep. Keep moving forward one proud step at a time! 🦸🏻‍♀️🔥";
-    }
-
-    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey') || lower.includes('good morning') || lower.includes('good afternoon') || lower.includes('good evening')) {
+    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
       return "Hey Priya! ✨ Hope your day is treating you wonderfully! What's on your mind today? Ask me anything!";
     }
 
-    if (lower.includes('harish') || lower.includes('author') || lower.includes('who made') || lower.includes('who wrote')) {
-      return "Harish S. built this entire sanctuary and wrote 'Still Rooted' just for you! He wanted to give you a dedicated space to relax and smile whenever things get stressful. He also told me to ensure nobody messes with his code! 😄";
+    if (lower.includes('harish') || lower.includes('author')) {
+      return "Harish S. built this sanctuary and wrote 'Still Rooted' just for you to smile whenever life gets busy! 😄";
     }
 
-    if (lower.includes('how are you') || lower.includes('how r u') || lower.includes('how you doing')) {
-      return "I'm feeling super cheerful and ready to talk with you, Priya! How are you doing today? 😊";
-    }
-
-    if (lower.includes('who are you') || lower.includes('what are you') || lower.includes('your name')) {
-      return "I am Happy, your smart AI companion and assistant! I'm here to chat, read your story with you, cheer you up, tell jokes, and keep you company whenever you visit! 🤖✨";
-    }
-
-    if (lower.includes('what can you do') || lower.includes('help')) {
-      return "I can read your story 'Still Rooted' to you, tell you jokes, give you a pep-talk when things get heavy, discuss your thoughts, or just chat with you in live voice! 📖🎤";
-    }
-
-    if (lower.includes('advice') || lower.includes('what should i do') || lower.includes('suggest')) {
-      return "Whenever in doubt, take one slow breath. Focus only on the very next right step in front of you. You don't have to figure out the whole future at once! 🌿✨";
-    }
-
-    if (lower.includes('thank')) {
-      return "You're most welcome, Priya! Always right here whenever you need a smile, a laugh, or a chat! 🌸";
-    }
-
-    return "That's a great thought, Priya! Stay true to your pace, trust your instincts, and remember to take a break when things get busy. I'm always right here with you! 🌟";
+    return "That's a thoughtful question, Priya! Stay true to your pace, trust your instincts, and remember to take a break when things get busy. I'm always right here with you! 🌟";
   }
 
   /* --------------------------------------------------------------------------
-     TEXT-TO-SPEECH (TTS) PLAYBACK & CONTINUOUS LIVE VOICE LOOP
-     -------------------------------------------------------------------------- */
-  speakText(text) {
-    if (!('speechSynthesis' in window)) {
-      console.warn('[Happy AI] Speech synthesis not supported');
-      return;
-    }
-
-    try {
-      // Cancel previous speech immediately
-      window.speechSynthesis.cancel();
-      this.isSpeaking = false;
-
-      // Clean non-ASCII emojis that cause Windows Chrome TTS to stutter or crash
-      const cleanText = text
-        .replace(/[*#_~`]/g, '')
-        .replace(/https?:\/\/\S+/g, '')
-        .replace(/[^\x00-\x7F]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      if (!cleanText) return;
-
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      this.currentUtterance = utterance; // Prevent Chrome garbage collection bug
-
-      const params = window.settingsManager ? window.settingsManager.getVoiceParams() : { rate: 1.0, pitch: 1.1 };
-      const voiceName = window.settingsManager ? window.settingsManager.getVoiceName() : 'Aoede';
-
-      utterance.rate = Math.max(0.85, Math.min(1.3, params.rate || 1.0));
-      utterance.pitch = Math.max(0.85, Math.min(1.3, params.pitch || 1.1));
-
-      // Choose natural voice
-      const voices = window.speechSynthesis.getVoices();
-      if (voices && voices.length > 0) {
-        let preferredVoice = null;
-        if (voiceName === 'Aoede' || voiceName === 'Kore') {
-          preferredVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Victoria')) && v.lang.startsWith('en'))
-            || voices.find(v => v.lang.startsWith('en'));
-        } else if (voiceName === 'Charon') {
-          preferredVoice = voices.find(v => (v.name.includes('David') || v.name.includes('Male') || v.name.includes('Guy')) && v.lang.startsWith('en'))
-            || voices.find(v => v.lang.startsWith('en'));
-        } else {
-          preferredVoice = voices.find(v => v.lang.startsWith('en'));
-        }
-        if (preferredVoice) utterance.voice = preferredVoice;
-      }
-
-      utterance.onstart = () => {
-        this.isSpeaking = true;
-        if (this.visualizer) this.visualizer.classList.add('active');
-        this.updateStatusDisplay('speaking');
-      };
-
-      utterance.onend = () => {
-        this.isSpeaking = false;
-        this.currentUtterance = null;
-        if (this.visualizer) this.visualizer.classList.remove('active');
-
-        // Continuous Live Loop: If live mode is ON and panel is open, auto-listen for Priya's reply!
-        if (this.liveVoiceMode && this.isOpen) {
-          this.updateStatusDisplay('listening');
-          this.scheduleRestartListening(400); // 400ms pause to prevent hearing own speaker audio
-        } else {
-          this.updateStatusDisplay('idle');
-        }
-      };
-
-      utterance.onerror = (e) => {
-        console.warn('[Happy AI] SpeechSynthesis utterance error:', e);
-        this.isSpeaking = false;
-        this.currentUtterance = null;
-        if (this.visualizer) this.visualizer.classList.remove('active');
-
-        if (this.liveVoiceMode && this.isOpen) {
-          this.scheduleRestartListening(400);
-        } else {
-          this.updateStatusDisplay('idle');
-        }
-      };
-
-      // Chrome paused state workaround
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-
-      window.speechSynthesis.speak(utterance);
-
-    } catch (err) {
-      console.warn('[Happy AI] speakText error:', err);
-      this.isSpeaking = false;
-    }
-  }
-
-  /* --------------------------------------------------------------------------
-     UI STATUS DISPLAY
+     STATUS INDICATOR
      -------------------------------------------------------------------------- */
   updateStatusDisplay(state) {
     if (!this.statusLine) return;
+    const voice = window.settingsManager ? window.settingsManager.getVoiceName() : 'Zephyr';
 
     if (state === 'listening') {
       this.statusLine.innerHTML = '<span style="color: #ff4757; font-weight:700;">● 🎙️ Live Listening... Speak now</span>';
     } else if (state === 'thinking') {
       this.statusLine.innerHTML = '<span style="color: #e67e22; font-weight:700;">● ✨ Happy is thinking...</span>';
     } else if (state === 'speaking') {
-      this.statusLine.innerHTML = '<span style="color: var(--rose-primary); font-weight:700;">● 🔊 Happy is speaking...</span>';
+      this.statusLine.innerHTML = `<span style="color: var(--rose-primary); font-weight:700;">● 🔊 Gemini ${voice} Voice Speaking...</span>`;
     } else {
       if (this.liveVoiceMode) {
         this.statusLine.innerHTML = '<span style="color: #2ed573; font-weight:700;">● 🎙️ Live Voice Ready</span>';
       } else {
-        this.statusLine.innerHTML = '<span style="color: #2ed573;">● Smart Companion • Aoede Live</span>';
+        this.statusLine.innerHTML = `<span style="color: #2ed573;">● Smart Companion • ${voice} Voice</span>`;
       }
     }
   }
