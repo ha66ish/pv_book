@@ -2903,6 +2903,454 @@ html, body {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ==========================================================================
+   HARISH'S INTRO LETTER FOR MS. PRIYA VARSHINI (Paper Landing Stationery Modal)
+   ========================================================================== */
+.header-btn.letter-btn {
+  position: relative;
+  color: var(--rose-dark);
+  background: #fff0f3;
+  border: 1px solid rgba(217, 107, 130, 0.3);
+  transition: var(--transition-smooth);
+}
+
+.header-btn.letter-btn:hover {
+  background: var(--rose-primary);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(217, 107, 130, 0.25);
+}
+
+.letter-badge-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rose-dark);
+  box-shadow: 0 0 0 2px #ffffff;
+  animation: pulseLetterDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseLetterDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.75; }
+}
+
+.intro-letter-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 8500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.35s ease;
+}
+
+.intro-letter-modal.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.intro-letter-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 12, 22, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.intro-letter-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  perspective: 1200px;
+}
+
+.intro-letter-paper {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  background: linear-gradient(155deg, #fffdf8 0%, #faf3ea 100%);
+  border: 1px solid rgba(212, 163, 115, 0.5);
+  border-radius: 22px;
+  box-shadow: 
+    0 30px 70px -15px rgba(28, 16, 25, 0.55),
+    0 0 0 1px rgba(212, 163, 115, 0.3),
+    0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 2.2rem 2.4rem 2rem;
+  color: #2c2227;
+  outline: 1px solid rgba(212, 163, 115, 0.3);
+  outline-offset: -10px;
+  transform-origin: top center;
+  transform: translateY(-160px) rotate(-9deg) scale(0.8);
+  opacity: 0;
+}
+
+/* Paper Landing Animation */
+.intro-letter-modal.active .intro-letter-paper {
+  animation: paperLanding 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.intro-letter-modal.closing .intro-letter-paper {
+  animation: paperFlyAway 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes paperLanding {
+  0% {
+    opacity: 0;
+    transform: translateY(-160px) rotate(-9deg) scale(0.8);
+    filter: blur(5px);
+  }
+  38% {
+    opacity: 0.98;
+    transform: translateY(18px) rotate(2.2deg) scale(1.025);
+    filter: blur(0);
+  }
+  62% {
+    transform: translateY(-9px) rotate(-1.5deg) scale(0.992);
+  }
+  82% {
+    transform: translateY(3px) rotate(0.6deg) scale(1.004);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes paperFlyAway {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(55px) rotate(6deg) scale(0.92);
+    filter: blur(3px);
+  }
+}
+
+/* Postmark & Wax Seal Header */
+.letter-stamp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.4rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px dashed rgba(212, 163, 115, 0.4);
+}
+
+.letter-postmark {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px dashed var(--rose-primary);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-display);
+  color: var(--rose-primary);
+  transform: rotate(-3deg);
+  background: rgba(255, 240, 243, 0.5);
+}
+
+.postmark-date {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.postmark-to {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.letter-wax-seal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #c93b58 0%, #8f1f37 100%);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+  box-shadow: 
+    0 4px 14px rgba(184, 64, 88, 0.45),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.letter-close-x {
+  background: #f1e7d9;
+  border: 1px solid rgba(212, 163, 115, 0.5);
+  color: #634b3f;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.letter-close-x:hover {
+  background: var(--rose-primary);
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+/* Salutation & Header */
+.letter-header {
+  margin-bottom: 1.2rem;
+}
+
+.letter-title {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--rose-dark);
+  line-height: 1.25;
+  margin-bottom: 0.35rem;
+}
+
+.letter-subtitle {
+  font-size: 0.92rem;
+  color: var(--text-gold);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Letter Body */
+.letter-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.letter-para {
+  font-size: 0.96rem;
+  line-height: 1.62;
+  color: #3b2c34;
+}
+
+.intro-greeting em {
+  color: var(--rose-dark);
+  font-weight: 600;
+}
+
+/* Guide Grid */
+.letter-guide-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  margin: 0.3rem 0;
+}
+
+.letter-guide-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  background: #ffffff;
+  border: 1px solid rgba(212, 163, 115, 0.3);
+  border-radius: 14px;
+  padding: 0.95rem 1.1rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.letter-guide-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(212, 163, 115, 0.18);
+}
+
+.guide-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.book-card-guide .guide-icon-box {
+  background: #fff0f3;
+  color: var(--rose-dark);
+  border: 1px solid rgba(217, 107, 130, 0.3);
+}
+
+.video-card-guide .guide-icon-box {
+  background: #fdf5ea;
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.nav-card-guide .guide-icon-box {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.guide-text h4 {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.5px;
+}
+
+.guide-text p {
+  font-size: 0.86rem;
+  line-height: 1.48;
+  color: #55444e;
+  margin: 0;
+}
+
+.guide-text strong {
+  color: var(--rose-dark);
+}
+
+.closing-note {
+  background: rgba(255, 240, 243, 0.6);
+  border-left: 3px solid var(--rose-primary);
+  padding: 0.75rem 1rem;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.93rem;
+  margin-top: 0.2rem;
+}
+
+/* Signature Block */
+.letter-signature-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-top: 0.4rem;
+  padding-right: 0.5rem;
+}
+
+.sig-note {
+  font-size: 0.82rem;
+  color: #7a6671;
+  font-style: italic;
+}
+
+.sig-author {
+  font-family: var(--font-script);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--rose-dark);
+  line-height: 1.2;
+}
+
+/* Footer Controls & Don't Repeat Checkbox */
+.letter-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px dashed rgba(212, 163, 115, 0.4);
+  flex-wrap: wrap;
+}
+
+.letter-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.letter-checkbox-wrap input[type="checkbox"] {
+  display: none;
+}
+
+.custom-check-box {
+  width: 19px;
+  height: 19px;
+  border: 1.5px solid var(--rose-primary);
+  border-radius: 5px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+}
+
+.letter-checkbox-wrap input[type="checkbox"]:checked + .custom-check-box {
+  background: var(--rose-primary);
+  border-color: var(--rose-primary);
+}
+
+.letter-checkbox-wrap input[type="checkbox"]:not(:checked) + .custom-check-box i {
+  display: none;
+}
+
+.check-text {
+  font-size: 0.84rem;
+  color: #634b3f;
+  font-weight: 500;
+}
+
+.letter-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.letter-skip-btn {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(212, 163, 115, 0.5);
+  color: #634b3f;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.letter-skip-btn:hover {
+  background: #f1e7d9;
+  color: #3b2c34;
+}
+
+.letter-explore-btn {
+  background: linear-gradient(135deg, var(--rose-primary) 0%, var(--rose-dark) 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.58rem 1.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(217, 107, 130, 0.35);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.letter-explore-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 22px rgba(217, 107, 130, 0.45);
+}
+
 /* Toast Notifications */
 #toast-notification {
   position: fixed;
@@ -3057,6 +3505,51 @@ html, body {
 
   .clip-title {
     font-size: 1.05rem;
+  }
+
+  /* Mobile Intro Letter */
+  .intro-letter-wrapper {
+    padding: 0.8rem 0.6rem;
+  }
+
+  .intro-letter-paper {
+    padding: 1.5rem 1.2rem 1.3rem;
+    border-radius: 16px;
+    outline-offset: -6px;
+  }
+
+  .letter-title {
+    font-size: 1.45rem;
+  }
+
+  .letter-stamp-row {
+    margin-bottom: 1rem;
+  }
+
+  .letter-wax-seal span {
+    display: none;
+  }
+
+  .letter-wax-seal {
+    padding: 5px 10px;
+  }
+
+  .letter-footer-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  .letter-btn-group {
+    width: 100%;
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .letter-skip-btn, .letter-explore-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.65rem 0.5rem;
   }
 }
 

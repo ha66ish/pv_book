@@ -133,6 +133,10 @@
 
     <!-- Header Actions -->
     <div class="header-actions">
+      <button id="open-intro-letter-btn" class="header-btn letter-btn" title="Letter from Harish 💌">
+        <i class="fa-solid fa-envelope-open-text"></i>
+        <span class="letter-badge-dot" title="Special Note"></span>
+      </button>
       <button id="petals-toggle-btn" class="header-btn petals-btn active" title="Toggle Lively Rose Petals & Leaves">
         <i class="fa-solid fa-spa"></i>
       </button>
@@ -636,7 +640,117 @@
   </div>
 
   <!-- ==========================================================================
-       8. VOICE AGENT "HAPPY AI ASSISTANT" MASCOT WIDGET
+       9. HARISH'S INTRO LETTER FOR MS. PRIYA VARSHINI MODAL
+       ========================================================================== -->
+  <div id="intro-letter-modal" class="intro-letter-modal" aria-hidden="true">
+    <div class="intro-letter-backdrop" id="intro-letter-backdrop"></div>
+    <div class="intro-letter-wrapper">
+      <div class="intro-letter-paper" id="intro-letter-paper">
+        <!-- Floating Postmark & Wax Seal Header -->
+        <div class="letter-stamp-row">
+          <div class="letter-postmark">
+            <span class="postmark-date"><i class="fa-solid fa-stamp"></i> SPECIAL DISPATCH</span>
+            <span class="postmark-to">TO: MS. PRIYA VARSHINI 🌸</span>
+          </div>
+          <div class="letter-wax-seal">
+            <i class="fa-solid fa-heart"></i>
+            <span>FOR PRIYA</span>
+          </div>
+          <button id="intro-letter-close-x" class="letter-close-x" title="Close letter">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Salutation & Title -->
+        <div class="letter-header">
+          <h2 class="letter-title">Hey Ms. Priya Varshini! 💌 ✨</h2>
+          <p class="letter-subtitle">Welcome to your very own personal digital sanctuary</p>
+        </div>
+
+        <!-- Letter Body Content -->
+        <div class="letter-body-content">
+          <p class="letter-para intro-greeting">
+            This entire space is crafted just for you! I made a short story and a glimpse of things I can create for you digitally. 
+            To be completely honest with you... <em>even I don’t fully know all the wild things I’m going to build here yet!</em> 😅 
+            But here is a quick tour so you don't get lost in your own sanctuary:
+          </p>
+
+          <div class="letter-guide-grid">
+            <!-- 1. The 3D Book Rack -->
+            <div class="letter-guide-card book-card-guide">
+              <div class="guide-icon-box">
+                <i class="fa-solid fa-book-open"></i>
+              </div>
+              <div class="guide-text">
+                <h4>1. The 3D Book Rack</h4>
+                <p>
+                  Click on the 3D book on the shelf to open it! It's a sweet, bite-sized illustrated story titled <strong>"Still Rooted"</strong> written for you. 
+                  Don't worry—it’s super quick and literally consumes less time than <strong>3 Instagram reels</strong>! 📱⏱️
+                </p>
+              </div>
+            </div>
+
+            <!-- 2. Video Gallery -->
+            <div class="letter-guide-card video-card-guide">
+              <div class="guide-icon-box">
+                <i class="fa-solid fa-film"></i>
+              </div>
+              <div class="guide-text">
+                <h4>2. Varshini's Video Gallery</h4>
+                <p>
+                  Your special stage clips, memories, and songs in one place! Tap any clip to watch in theater mode, or tap <strong>Edit</strong> on any card to customize its title and fun notes.
+                </p>
+              </div>
+            </div>
+
+            <!-- 3. Navigation & Happy AI -->
+            <div class="letter-guide-card nav-card-guide">
+              <div class="guide-icon-box">
+                <i class="fa-solid fa-compass"></i>
+              </div>
+              <div class="guide-text">
+                <h4>Top Navigation & Happy AI</h4>
+                <p>
+                  Switch between sections anytime using the tabs at the <strong>very top</strong>. Plus, say hi to <strong>Happy</strong> (the cute AI mascot at the bottom-right)—he can talk with you live in Tamil or English! 🤖💬
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p class="letter-para closing-note">
+            Ok Varshini, thank you so much for your time! Please feel free to explore every page and clip. 
+            I'll be adding many more surprises and chapters here soon... <strong>consider this just the trailer! 😉🎬🍿</strong>
+          </p>
+
+          <div class="letter-signature-block">
+            <span class="sig-note">Crafted with care & creativity,</span>
+            <span class="sig-author">Harish S. ✍️</span>
+          </div>
+        </div>
+
+        <!-- Footer Controls & Don't Repeat -->
+        <div class="letter-footer-bar">
+          <label class="letter-checkbox-wrap" for="intro-dont-repeat-checkbox">
+            <input type="checkbox" id="intro-dont-repeat-checkbox">
+            <span class="custom-check-box"><i class="fa-solid fa-check"></i></span>
+            <span class="check-text">Don’t repeat this again on login</span>
+          </label>
+
+          <div class="letter-btn-group">
+            <button id="intro-letter-skip-btn" class="letter-skip-btn" type="button">
+              Skip for now
+            </button>
+            <button id="intro-letter-explore-btn" class="letter-explore-btn" type="button">
+              Start Exploring 🚀
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       10. VOICE AGENT "HAPPY AI ASSISTANT" MASCOT WIDGET
        ========================================================================== -->
   <div id="happy-voice-widget">
     <!-- Greeting Bubble -->
@@ -725,6 +839,7 @@
   <script src="js/auth.js"></script>
   <script src="js/book.js"></script>
   <script src="js/gallery.js"></script>
+  <script src="js/intro-letter.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/happy-agent.js"></script>
   <script src="js/app.js"></script>

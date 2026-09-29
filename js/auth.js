@@ -100,6 +100,13 @@ class AuthManager {
       if (window.showToast) {
         window.showToast('Welcome to your book rack, Priya! 📚✨');
       }
+
+      // Show the guide letter if not set to 'Don't repeat'
+      if (window.introLetterManager) {
+        setTimeout(() => {
+          window.introLetterManager.checkAndShow();
+        }, 500);
+      }
     } else {
       this.errorMsg.textContent = "Oops! That key didn't match. Ask your friend Harish if you forgot it! 🗝️😄";
       this.passInput.value = '';
