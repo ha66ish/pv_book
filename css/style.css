@@ -2186,13 +2186,13 @@ html, body {
 
 .book-spread-container {
   width: 100%;
-  max-width: 1060px;
-  height: 90%;
-  max-height: 680px;
+  max-width: 1080px;
+  height: 92%;
+  max-height: 700px;
   position: relative;
   display: flex;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 30px rgba(220, 140, 155, 0.2);
   transform-style: preserve-3d;
   color: #1e293b;
@@ -2220,11 +2220,28 @@ html, body {
 .book-page-half {
   flex: 1;
   height: 100%;
-  padding: 2.5rem 2.8rem;
+  padding: 1.8rem 2.4rem 1.2rem;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 107, 130, 0.35) transparent;
+}
+
+.book-page-half::-webkit-scrollbar {
+  width: 5px;
+}
+.book-page-half::-webkit-scrollbar-track {
+  background: transparent;
+}
+.book-page-half::-webkit-scrollbar-thumb {
+  background: rgba(217, 107, 130, 0.25);
+  border-radius: 4px;
+}
+.book-page-half::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 107, 130, 0.5);
 }
 
 .book-page-left {
@@ -2239,22 +2256,23 @@ html, body {
 }
 
 .comic-artwork-frame {
+  flex: 1;
   width: 100%;
-  height: 100%;
-  min-height: 380px;
-  max-height: 480px;
+  min-height: 0;
   position: relative;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-  border: 3px solid #1e293b;
+  border: 2.5px solid #1e293b;
   background: #111;
+  display: flex;
 }
 
 .comic-artwork-frame img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   transition: transform 0.5s ease;
 }
 
@@ -2275,84 +2293,87 @@ html, body {
 .story-text-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  height: 100%;
+  justify-content: flex-start;
+  min-height: 100%;
+  width: 100%;
   font-family: var(--font-serif);
 }
 
 .chapter-number {
   font-family: var(--font-display);
-  font-size: 0.85rem;
-  letter-spacing: 2.5px;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--rose-dark);
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.35rem;
   font-weight: 700;
 }
 
 .chapter-heading {
   font-family: var(--font-serif);
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: #0f172a;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.85rem;
   line-height: 1.25;
 }
 
 .story-paragraph {
-  font-size: 1.05rem;
-  line-height: 1.75;
+  font-size: 0.98rem;
+  line-height: 1.62;
   color: #334155;
-  margin-bottom: 1.1rem;
+  margin-bottom: 0.75rem;
 }
 
 .story-quote-highlight {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: #144230;
   background: #f0fdf4;
-  border-left: 4px solid var(--emerald-accent);
-  padding: 0.8rem 1.2rem;
-  margin: 1.2rem 0;
+  border-left: 3.5px solid var(--emerald-accent);
+  padding: 0.65rem 1rem;
+  margin: 0.75rem 0;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .story-gold-highlight {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: 1.08rem;
   font-weight: 700;
   color: var(--rose-dark);
   background: #fff0f3;
-  border-left: 4px solid var(--rose-primary);
-  padding: 0.9rem 1.2rem;
-  margin: 1.2rem 0;
+  border-left: 3.5px solid var(--rose-primary);
+  padding: 0.7rem 1.05rem;
+  margin: 0.75rem 0;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .story-final-smile {
-  font-size: 2rem;
+  font-size: 1.65rem;
   font-weight: 700;
   color: var(--rose-dark);
   font-family: var(--font-serif);
-  margin: 1.5rem 0 0.8rem;
+  margin: 0.9rem 0 0.4rem;
   text-align: center;
 }
 
 .story-signature {
   font-family: var(--font-sans);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: #475569;
   text-align: right;
-  margin-top: 1rem;
+  margin-top: 0.65rem;
 }
 
 .page-num-footer {
+  flex-shrink: 0;
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
   font-family: var(--font-sans);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: #64748b;
   display: flex;
   justify-content: space-between;
@@ -2617,103 +2638,135 @@ html, body {
   cursor: pointer;
 }
 
-/* Comments Section on Final Page */
-.story-comments-wrapper {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px dashed rgba(217, 107, 130, 0.3);
+/* ==========================================================================
+   DEDICATED COMMENTS & REVIEW GUESTBOOK (Page 8 in Reader)
+   ========================================================================== */
+.story-comments-wrapper.standalone-comments-page {
+  margin-top: 0.2rem;
+  padding-top: 0;
+  border-top: none;
   font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
-.story-comments-header {
+.guestbook-intro {
+  font-size: 0.92rem;
+  color: #475569;
+  margin-bottom: 0.8rem;
+  line-height: 1.55;
+}
+
+.guestbook-reaction-prompt {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--rose-dark);
+  font-family: var(--font-sans);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.story-comments-header h4 {
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  color: var(--rose-dark);
+  gap: 6px;
+  margin-bottom: 0.5rem;
 }
 
 .emoji-reaction-picker {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   margin-bottom: 0.8rem;
 }
 
 .reaction-emoji-btn {
   background: #fff0f3;
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid var(--border-subtle);
   font-size: 1.25rem;
-  padding: 0.35rem 0.6rem;
-  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .reaction-emoji-btn:hover, .reaction-emoji-btn.selected {
-  transform: scale(1.18);
+  transform: scale(1.15);
   background: #fce4ec;
   border-color: var(--rose-primary);
+  box-shadow: 0 3px 10px rgba(217, 107, 130, 0.2);
+}
+
+.comment-input-box-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 .comment-input-textarea {
   width: 100%;
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(220, 140, 155, 0.4);
-  background: #fffafb;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 140, 155, 0.45);
+  background: #fffdfa;
   font-family: var(--font-sans);
   font-size: 0.88rem;
-  resize: vertical;
-  min-height: 70px;
+  resize: none;
+  min-height: 72px;
   color: var(--text-main);
   outline: none;
-  margin-bottom: 0.6rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .comment-input-textarea:focus {
   border-color: var(--rose-primary);
+  box-shadow: 0 0 0 3px rgba(217, 107, 130, 0.15);
   background: #ffffff;
 }
 
 .submit-comment-btn {
-  background: var(--rose-primary);
+  align-self: flex-start;
+  background: linear-gradient(135deg, var(--rose-primary) 0%, var(--rose-dark) 100%);
   color: #fff;
   border: none;
-  padding: 0.55rem 1.2rem;
-  border-radius: 6px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  padding: 0.55rem 1.3rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  box-shadow: 0 3px 10px rgba(217, 107, 130, 0.25);
+  transition: var(--transition-smooth);
 }
 
 .submit-comment-btn:hover {
-  background: var(--rose-dark);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(217, 107, 130, 0.35);
 }
 
 .saved-comments-feed {
-  margin-top: 1.2rem;
+  margin-top: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  max-height: 160px;
+  gap: 0.55rem;
+  max-height: 180px;
   overflow-y: auto;
+  padding-right: 4px;
+}
+
+.saved-comments-feed::-webkit-scrollbar {
+  width: 4px;
+}
+.saved-comments-feed::-webkit-scrollbar-thumb {
+  background: rgba(217, 107, 130, 0.3);
+  border-radius: 4px;
 }
 
 .comment-item-card {
   background: #fff8f9;
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 0.6rem 0.8rem;
-  font-size: 0.84rem;
+  border: 1px solid rgba(220, 140, 155, 0.25);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
   color: var(--text-main);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .comment-meta {
@@ -2722,7 +2775,14 @@ html, body {
   justify-content: space-between;
   font-size: 0.72rem;
   color: #8c7b68;
+  font-weight: 600;
   margin-bottom: 0.25rem;
+}
+
+.comment-item-card p {
+  margin: 0;
+  line-height: 1.45;
+  color: #334155;
 }
 
 /* ==========================================================================

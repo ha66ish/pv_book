@@ -133,7 +133,7 @@ const STORY_DATA = {
         image: 'assets/images/scene_6.jpg',
         imageCaption: 'Scene 07: You grew through every storm, Priyavarshini.',
         mood: 'dawn',
-        isEndPage: true,
+        isEndPage: false,
         content: `
           <p class="story-paragraph">Because storms don't last forever.</p>
           <p class="story-paragraph">One morning, the rain will stop. The sky will open. And you will look back at the person who thought she couldn't make it through...</p>
@@ -146,8 +146,20 @@ const STORY_DATA = {
           <h2 class="story-final-smile">“I knew I could.” ❤️</h2>
           <div class="story-signature">
             Rooting for you always, Priya! 🌿<br>
-            <span style="font-size: 1rem; font-family: var(--font-sans); color: #9c6c21; font-weight: 700; display: block; margin-top: 0.35rem;">— Author: Harish S.</span>
+            <span style="font-size: 0.95rem; font-family: var(--font-sans); color: #9c6c21; font-weight: 700; display: block; margin-top: 0.35rem;">— Author: Harish S.</span>
           </div>
+        `
+      },
+      {
+        pageNumber: 8,
+        chapter: 'SPECIAL EPILOGUE',
+        title: 'Priya’s Thoughts & Review ✍️',
+        image: 'assets/images/book_cover.jpg',
+        imageCaption: 'Still Rooted • The End of Volume I • Dedicated to Priyavarshini ✨',
+        mood: 'dawn',
+        isCommentPage: true,
+        content: `
+          <p class="story-paragraph">Special Epilogue: Priya's Thoughts & Review. Leave your honest reactions, feelings, and review for Harish!</p>
         `
       }
     ]
@@ -429,59 +441,72 @@ class BookReader {
       </div>
     `;
 
-    // Render Right Page: Story Prose
-    let rightContent = `
-      <div class="story-text-container">
-        <div class="chapter-number">${page.chapter}</div>
-        <h2 class="chapter-heading">${page.title}</h2>
-        <div class="story-body-text">
-          ${page.content}
-        </div>
-    `;
+    // Render Right Page: Story Prose or Dedicated Guestbook Page
+    let rightContent = '';
 
-    // If it's the End Page (Epilogue), append Priya's Comments & Reaction section!
-    if (page.isEndPage) {
-      rightContent += `
-        <div class="story-comments-wrapper">
-          <div class="story-comments-header">
-            <h4><i class="fa-solid fa-pen-fancy" style="color:var(--rose-primary);"></i> Priya's Thoughts & Review</h4>
-            <span style="font-size:0.75rem; color:#8c7b68;">Leave a note for Harish</span>
-          </div>
-
-          <div class="emoji-reaction-picker" id="reaction-picker">
-            <button type="button" class="reaction-emoji-btn selected" data-emoji="🌟">🌟</button>
-            <button type="button" class="reaction-emoji-btn" data-emoji="☕">☕</button>
-            <button type="button" class="reaction-emoji-btn" data-emoji="🦸🏻‍♀️">🦸🏻‍♀️</button>
-            <button type="button" class="reaction-emoji-btn" data-emoji="😂">😂</button>
-            <button type="button" class="reaction-emoji-btn" data-emoji="💯">💯</button>
-          </div>
-
-          <textarea id="story-comment-input" class="comment-input-textarea" placeholder="Tell Harish what you thought of the story! Your honest thoughts, roast, or review... 😄"></textarea>
+    if (page.isCommentPage) {
+      rightContent = `
+        <div class="story-text-container guestbook-page-container">
+          <div class="chapter-number">${page.chapter}</div>
+          <h2 class="chapter-heading">${page.title}</h2>
           
-          <button type="button" id="save-comment-btn" class="submit-comment-btn">
-            <i class="fa-solid fa-paper-plane"></i> Save Reaction
-          </button>
+          <p class="story-paragraph guestbook-intro">
+            Thank you for reading <em>Still Rooted</em>, Priya! 🌿<br>
+            Leave your honest thoughts, roast, or review for Harish below. Your reactions are preserved right here in your sanctuary:
+          </p>
 
-          <div class="saved-comments-feed" id="saved-comments-feed">
-            <!-- Loaded dynamically -->
+          <div class="story-comments-wrapper standalone-comments-page">
+            <div class="guestbook-reaction-prompt">
+              <i class="fa-solid fa-heart" style="color:var(--rose-primary);"></i> How did the story make you feel?
+            </div>
+
+            <div class="emoji-reaction-picker" id="reaction-picker">
+              <button type="button" class="reaction-emoji-btn selected" data-emoji="🌟" title="Inspired">🌟</button>
+              <button type="button" class="reaction-emoji-btn" data-emoji="☕" title="Warm & Cozy">☕</button>
+              <button type="button" class="reaction-emoji-btn" data-emoji="🦸🏻‍♀️" title="Unstoppable">🦸🏻‍♀️</button>
+              <button type="button" class="reaction-emoji-btn" data-emoji="😂" title="Loved It">😂</button>
+              <button type="button" class="reaction-emoji-btn" data-emoji="💯" title="Masterpiece">💯</button>
+            </div>
+
+            <div class="comment-input-box-row">
+              <textarea id="story-comment-input" class="comment-input-textarea" rows="3" placeholder="Tell Harish what you thought of the story! Your honest thoughts, roast, or review... 😄"></textarea>
+              <button type="button" id="save-comment-btn" class="submit-comment-btn">
+                <i class="fa-solid fa-paper-plane"></i> Save Reaction
+              </button>
+            </div>
+
+            <div class="saved-comments-feed" id="saved-comments-feed">
+              <!-- Loaded dynamically -->
+            </div>
+          </div>
+
+          <div class="page-num-footer">
+            <span><i class="fa-solid fa-feather-pointed" style="color:var(--gold-primary);"></i> Dedicated to Priyavarshini</span>
+            <span>Page ${page.pageNumber} of ${book.pages.length}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      rightContent = `
+        <div class="story-text-container">
+          <div class="chapter-number">${page.chapter}</div>
+          <h2 class="chapter-heading">${page.title}</h2>
+          <div class="story-body-text">
+            ${page.content}
+          </div>
+          <div class="page-num-footer">
+            <span><i class="fa-solid fa-feather-pointed" style="color:var(--gold-primary);"></i> Dedicated to Priyavarshini</span>
+            <span>Page ${page.pageNumber} of ${book.pages.length}</span>
           </div>
         </div>
       `;
     }
 
-    rightContent += `
-        <div class="page-num-footer">
-          <span><i class="fa-solid fa-feather-pointed" style="color:var(--gold-primary);"></i> Dedicated to Priyavarshini</span>
-          <span>Page ${page.pageNumber} of ${book.pages.length}</span>
-        </div>
-      </div>
-    `;
-
     this.pageRightEl.innerHTML = rightContent;
     this.applyFontStyles();
 
-    // Bind comments functionality if on end page
-    if (page.isEndPage) {
+    // Bind comments functionality if on dedicated comment page
+    if (page.isCommentPage) {
       this.bindCommentsLogic();
     }
 
