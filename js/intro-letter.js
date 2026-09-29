@@ -57,6 +57,15 @@ class IntroLetterManager {
       }
     });
 
+    // Embedded on-page letter toggle
+    const embeddedCard = document.getElementById('page-embedded-letter');
+    const togglePageLetterBtn = document.getElementById('page-letter-toggle-btn');
+    if (embeddedCard && togglePageLetterBtn) {
+      togglePageLetterBtn.addEventListener('click', () => {
+        embeddedCard.classList.toggle('collapsed');
+      });
+    }
+
     // Check if user is already authenticated on load
     this.checkInitialLoad();
   }
