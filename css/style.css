@@ -3941,8 +3941,12 @@ html, body {
   }
 
   .book-page-half {
-    padding: 1.1rem 1rem 4.5rem;
+    padding: 1.1rem 1rem 1.8rem;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .book-page-right {
+    padding-top: 1.35rem;
   }
 
   .comic-artwork-frame {
@@ -3976,29 +3980,33 @@ html, body {
     font-size: 1.3rem;
   }
 
-  /* Floating Prev/Next arrows: positioned comfortably at bottom without blocking reading text */
+  /* Nav buttons placed precisely in the center white space area at top of chapter */
   .reader-page-nav {
-    width: 38px;
-    height: 38px;
-    font-size: 0.95rem;
-    top: auto;
-    bottom: 12px;
-    transform: none;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    width: 36px;
+    height: 36px;
+    font-size: 0.92rem;
+    top: 49.3%;
+    bottom: auto;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(217, 107, 130, 0.25);
     border: 1.5px solid var(--rose-primary);
+    color: var(--rose-dark);
+    z-index: 100;
   }
 
-  .reader-page-nav:hover {
-    transform: scale(1.08);
+  .reader-page-nav:hover,
+  .reader-page-nav:active {
+    transform: translateY(-50%) scale(1.08);
+    background: #fff0f3;
   }
 
   .reader-page-nav.prev-nav {
-    left: 12px;
+    left: 8px;
   }
 
   .reader-page-nav.next-nav {
-    right: 12px;
+    right: 8px;
   }
 
   /* Reader Tutorial Walkthrough on Mobile */
