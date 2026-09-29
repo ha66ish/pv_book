@@ -25,6 +25,11 @@ class DriveGallery {
     this.closeAddBtn = document.getElementById('close-add-modal-btn');
     this.addForm = document.getElementById('add-video-form');
 
+    // Edit Video Modal elements
+    this.editModal = document.getElementById('edit-video-modal');
+    this.closeEditBtn = document.getElementById('close-edit-modal-btn');
+    this.editForm = document.getElementById('edit-video-form');
+
     this.primaryStorageKey = 'pv_drive_primary_url';
     this.videosStorageKey = 'pv_drive_videos_list';
 
@@ -80,6 +85,28 @@ class DriveGallery {
       });
     }
 
+    // Modal bindings: Edit Video Modal
+    if (this.closeEditBtn) {
+      this.closeEditBtn.addEventListener('click', () => {
+        if (this.editModal) this.editModal.classList.remove('active');
+      });
+    }
+
+    if (this.editForm) {
+      this.editForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSaveEditedClip();
+      });
+    }
+
+    if (this.editModal) {
+      this.editModal.addEventListener('click', (e) => {
+        if (e.target === this.editModal) {
+          this.editModal.classList.remove('active');
+        }
+      });
+    }
+
     // Modal bindings: Cinema Player Modal
     if (this.playerCloseBtn) {
       this.playerCloseBtn.addEventListener('click', () => this.closePlayerModal());
@@ -101,6 +128,9 @@ class DriveGallery {
         }
         if (this.addModal && this.addModal.classList.contains('active')) {
           this.addModal.classList.remove('active');
+        }
+        if (this.editModal && this.editModal.classList.contains('active')) {
+          this.editModal.classList.remove('active');
         }
       }
     });
@@ -265,6 +295,9 @@ class DriveGallery {
               <button class="clip-watch-btn" title="Watch Clip">
                 <i class="fa-solid fa-play"></i> Watch
               </button>
+              <button class="edit-clip-btn" data-index="${index}" title="Edit Clip Details">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
               <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="clip-drive-link-btn" title="Open in Google Drive">
                 <i class="fa-brands fa-google-drive"></i>
               </a>
@@ -279,6 +312,7 @@ class DriveGallery {
       // Tap card or "Watch" button to open mobile-friendly lightbox player
       const poster = card.querySelector('.clip-poster-wrap');
       const watchBtn = card.querySelector('.clip-watch-btn');
+      const editBtn = card.querySelector('.edit-clip-btn');
       
       const openHandler = (e) => {
         e.stopPropagation();
@@ -287,6 +321,14 @@ class DriveGallery {
 
       if (poster) poster.addEventListener('click', openHandler);
       if (watchBtn) watchBtn.addEventListener('click', openHandler);
+
+      // Edit button
+      if (editBtn) {
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.openEditModal(index);
+        });
+      }
 
       // Remove button
       const removeBtn = card.querySelector('.remove-clip-btn');
@@ -396,6 +438,54 @@ class DriveGallery {
 
     if (window.soundEngine) window.soundEngine.playHappyChirp();
     if (window.showToast) window.showToast('Custom video memory saved! 🎬');
+  }
+
+  openEditModal(index) {
+    const item = this.videos[index];
+    if (!item) return;
+
+    const idxField = document.getElementById('edit-vid-index');
+    const titleField = document.getElementById('edit-vid-title');
+    const urlField = document.getElementById('edit-vid-url');
+    const descField = document.getElementById('edit-vid-desc');
+
+    if (idxField) idxField.value = index;
+    if (titleField) titleField.value = item.title || '';
+    if (urlField) urlField.value = item.url || '';
+    if (descField) descField.value = item.desc || '';
+
+    if (this.editModal) this.editModal.classList.add('active');
+  }
+
+  handleSaveEditedClip() {
+    const idxField = document.getElementById('edit-vid-index');
+    const index = parseInt(idxField ? idxField.value : '-1', 10);
+
+    if (isNaN(index) || index < 0 || !this.videos[index]) return;
+
+    const titleRaw = (document.getElementById('edit-vid-title')?.value || '').trim();
+    const url = (document.getElementById('edit-vid-url')?.value || '').trim();
+    const desc = (document.getElementById('edit-vid-desc')?.value || '').trim();
+
+    if (!url) {
+      if (window.showToast) window.showToast('Please provide a valid video link.');
+      return;
+    }
+
+    const title = titleRaw || this.beautifyTitle('', url);
+
+    // Update the video item
+    this.videos[index].title = title;
+    this.videos[index].url = url;
+    this.videos[index].desc = desc || "Special memory clip for Priyavarshini.";
+
+    localStorage.setItem(this.videosStorageKey, JSON.stringify(this.videos));
+    this.renderVideoCards();
+
+    if (this.editModal) this.editModal.classList.remove('active');
+
+    if (window.soundEngine) window.soundEngine.playHappyChirp();
+    if (window.showToast) window.showToast('Memory clip updated successfully! ✨');
   }
 
   removeVideo(index) {

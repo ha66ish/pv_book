@@ -583,28 +583,54 @@
     <div class="modal-content-card">
       <div class="modal-title-row">
         <h3>Add Memory Video</h3>
-        <button id="close-add-modal-btn" class="reader-ctrl-btn close-reader-btn">
+        <button id="close-add-modal-btn" class="reader-ctrl-btn close-reader-btn" title="Close">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
       <form id="add-video-form" class="auth-form">
         <div class="input-group">
           <label for="new-vid-title">Memory Title</label>
-          <input type="text" id="new-vid-title" placeholder="e.g. Evening by the Beach" required>
+          <input type="text" id="new-vid-title" placeholder="e.g. Varshini's Song" required>
         </div>
         <div class="input-group">
-          <label for="new-vid-url">Video URL (YouTube or MP4)</label>
-          <input type="url" id="new-vid-url" placeholder="https://www.youtube.com/watch?v=... or direct MP4 link" required>
-        </div>
-        <div class="input-group">
-          <label for="new-vid-tag">Tag</label>
-          <input type="text" id="new-vid-tag" placeholder="e.g. Special Moments, Smiles, Travels">
+          <label for="new-vid-url">Video URL (Google Drive / YouTube)</label>
+          <input type="url" id="new-vid-url" placeholder="https://drive.google.com/file/d/... or YouTube" required>
         </div>
         <div class="input-group">
           <label for="new-vid-desc">Note & Fun Memory</label>
-          <textarea id="new-vid-desc" rows="3" placeholder="Write a fun memory, inside joke, or note about this clip..."></textarea>
+          <textarea id="new-vid-desc" rows="3" placeholder="Write a fun memory or note about this clip..."></textarea>
         </div>
         <button type="submit" class="auth-btn">Save to Priya's Gallery</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       8. EDIT VIDEO MODAL
+       ========================================================================== -->
+  <div id="edit-video-modal">
+    <div class="modal-content-card">
+      <div class="modal-title-row">
+        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Video Clip</h3>
+        <button id="close-edit-modal-btn" class="reader-ctrl-btn close-reader-btn" title="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="edit-video-form" class="auth-form">
+        <input type="hidden" id="edit-vid-index" value="">
+        <div class="input-group">
+          <label for="edit-vid-title">Clip Title</label>
+          <input type="text" id="edit-vid-title" placeholder="e.g. Varshini's Special Moment" required>
+        </div>
+        <div class="input-group">
+          <label for="edit-vid-url">Video URL (Google Drive / YouTube)</label>
+          <input type="url" id="edit-vid-url" placeholder="https://drive.google.com/file/d/... or YouTube" required>
+        </div>
+        <div class="input-group">
+          <label for="edit-vid-desc">Note & Description</label>
+          <textarea id="edit-vid-desc" rows="3" placeholder="Write a note about this memory..."></textarea>
+        </div>
+        <button type="submit" class="auth-btn">Save Changes ✨</button>
       </form>
     </div>
   </div>
