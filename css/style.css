@@ -3932,18 +3932,22 @@ html, body {
   }
 
   .reader-book-viewport {
-    padding: 0.35rem 0.6rem;
+    padding: 0.5rem 0.5rem;
     perspective: none;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    flex: 1;
   }
 
   .book-spread-container {
-    height: calc(100vh - 75px);
-    max-height: none;
+    height: 100%;
+    max-height: 100%;
     width: 100%;
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.16);
     background: #ffffff;
     display: flex;
     flex-direction: column;
@@ -3965,18 +3969,31 @@ html, body {
     display: none !important;
   }
 
-  /* The right page becomes the single, unified, beautiful mobile story page */
+  /* The right page becomes the single, unified, Kindle-style mobile story page */
   .book-page-right {
     display: flex;
     flex-direction: column;
     width: 100% !important;
     height: auto;
     min-height: 100%;
-    border-radius: 14px;
-    padding: 0.95rem 1.85rem 1.4rem;
+    border-radius: 12px;
+    padding: 1.35rem 1.65rem 1.6rem;
     background: #ffffff !important;
     box-sizing: border-box;
     overflow-y: visible;
+  }
+
+  .story-text-container {
+    display: flex;
+    flex-direction: column;
+    min-height: auto;
+    width: 100%;
+  }
+
+  .page-num-footer {
+    margin-top: 1.2rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
   }
 
   /* The mobile comic artwork sits right under the chapter title in the center! */
