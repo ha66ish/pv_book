@@ -192,7 +192,25 @@ class HappyVoiceAgent {
 
     const bubble = document.createElement('div');
     bubble.className = `msg-bubble ${sender}`;
-    bubble.textContent = text;
+
+    if (sender === 'agent') {
+      const textSpan = document.createElement('span');
+      textSpan.textContent = text;
+      bubble.appendChild(textSpan);
+
+      const speakBtn = document.createElement('button');
+      speakBtn.className = 'bubble-speak-btn';
+      speakBtn.title = 'Listen to Happy speak';
+      speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+      speakBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.speakText(text);
+      };
+      bubble.appendChild(speakBtn);
+    } else {
+      bubble.textContent = text;
+    }
+
     this.messagesArea.appendChild(bubble);
     this.messagesArea.scrollTop = this.messagesArea.scrollHeight;
 
@@ -264,9 +282,9 @@ class HappyVoiceAgent {
 
     if (!apiKey || apiKey.length < 8) {
       thinkingBubble.remove();
-      const noKeyReply = "Hi Priya! To chat with me live powered by Google Gemini, Harish can add a Google Gemini API Key in 'Voice & Settings'. Until then, I'm happy to chat using my companion notes or tell you jokes! 😄";
-      this.addMessage("agent", noKeyReply);
-      this.speakText(noKeyReply);
+      const fallbackReply = this.getSmartFallbackResponse(userText);
+      this.addMessage("agent", fallbackReply);
+      this.speakText(fallbackReply);
       return;
     }
 
@@ -322,10 +340,7 @@ class HappyVoiceAgent {
         console.error('[Happy AI] Gemini API returned error:', data.error);
         if (window.showToast) window.showToast(`Gemini API: ${errorMsg}`, 5000);
         
-        // Show real diagnostic message to user instead of silent one-word reply
-        const friendlyNotice = `(Google Gemini Notice: ${errorMsg})`;
         const fallback = this.getSmartFallbackResponse(userText);
-        const combined = `${fallback}\n\n${friendlyNotice}`;
         this.addMessage("agent", fallback);
         this.speakText(fallback);
       }
@@ -343,7 +358,7 @@ class HappyVoiceAgent {
   getSmartFallbackResponse(text) {
     const lower = text.toLowerCase();
 
-    if (lower.includes('hard day') || lower.includes('tired') || lower.includes('exhausted') || lower.includes('sad')) {
+    if (lower.includes('hard day') || lower.includes('tired') || lower.includes('exhausted') || lower.includes('sad') || lower.includes('stressed')) {
       return "Take a breather, Priya! You've got this, and you don't have to carry the whole world on your shoulders today. Just like that resilient tree in 'Still Rooted', shake off the stress and remember your roots run deep! 🌿";
     }
 
@@ -351,85 +366,116 @@ class HappyVoiceAgent {
       const jokes = [
         "Why did the tree go to college? Because it wanted to branch out into greater things, just like you, Priya! 🌿😄",
         "What did one storm cloud say to the lightning? 'You're looking shockingly radiant today!' ⚡✨",
-        "Why do programmers prefer dark mode? Because light attracts bugs! (Harish probably knows all about that one!) 😂💻"
+        "Why do programmers prefer dark mode? Because light attracts bugs! (Harish probably knows all about that one!) 😂💻",
+        "Why was the book always calm? Because it knew how to keep things well-grounded! 📖😊"
       ];
       return jokes[Math.floor(Math.random() * jokes.length)];
     }
 
-    if (lower.includes('pep-talk') || lower.includes('inspire') || lower.includes('strength')) {
+    if (lower.includes('pep-talk') || lower.includes('inspire') || lower.includes('strength') || lower.includes('motivat')) {
       return "Listen to me, Priyavarshini! You have survived 100% of your hardest days so far. You are brilliant, unstoppable, and your roots run deep. Keep moving forward one step at a time! 🦸🏻‍♀️🔥";
     }
 
-    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
-      return "Hey Priya! ✨ Hope your day is treating you well! What can I do for you today?";
+    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey') || lower.includes('good morning') || lower.includes('good afternoon') || lower.includes('good evening')) {
+      return "Hey Priya! ✨ Hope your day is treating you wonderfully! What's on your mind today? Ask me anything!";
     }
 
     if (lower.includes('harish') || lower.includes('author') || lower.includes('who made') || lower.includes('who wrote')) {
       return "Harish S. built this entire sanctuary and wrote 'Still Rooted' just for you! He wanted to give you a dedicated space to relax and smile whenever things get stressful. He also told me to ensure nobody messes with his code! 😄";
     }
 
-    return "I hear you, Priya! Whatever happens today, remember you're doing great. Harish and I are always in your corner cheering for you! 🌟";
+    if (lower.includes('how are you') || lower.includes('how r u') || lower.includes('how you doing')) {
+      return "I'm feeling super cheerful and ready to assist you, Priya! How are you doing today? 😊";
+    }
+
+    if (lower.includes('who are you') || lower.includes('what are you') || lower.includes('your name')) {
+      return "I am Happy, your smart AI companion and assistant! I'm here to chat, read your story with you, cheer you up, tell jokes, and keep you company whenever you visit! 🤖✨";
+    }
+
+    if (lower.includes('what can you do') || lower.includes('help')) {
+      return "I can read your story 'Still Rooted' to you, tell you jokes, give you a pep-talk when things get heavy, discuss your thoughts, or just chat with you in real-time! 📖🎤";
+    }
+
+    if (lower.includes('advice') || lower.includes('what should i do') || lower.includes('suggest')) {
+      return "Whenever in doubt, take one slow breath. Focus only on the very next right step in front of you. You don't have to figure out the whole future at once! 🌿✨";
+    }
+
+    if (lower.includes('thank')) {
+      return "You're most welcome, Priya! Always here for you whenever you need a smile or a chat! 🌸";
+    }
+
+    // Default intelligent conversational response
+    return `That's a thoughtful question, Priya! Stay true to your pace, trust your instincts, and remember to take a break when things get busy. Ask Harish to save a Gemini key in Settings for infinite live answers! 🌟`;
   }
 
   speakText(text) {
-    if (!('speechSynthesis' in window)) return;
-
-    window.speechSynthesis.cancel();
-    this.stopSpeaking();
-
-    // Clean markdown/emojis for smoother vocal cadence
-    const cleanText = text.replace(/[*#_~`]/g, '');
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    const params = window.settingsManager ? window.settingsManager.getVoiceParams() : { rate: 1.0, pitch: 1.1 };
-    const voiceName = window.settingsManager ? window.settingsManager.getVoiceName() : 'Aoede';
-
-    utterance.rate = params.rate;
-
-    // Adjust pitch to reflect Aoede or selected voice
-    if (voiceName === 'Aoede') {
-      utterance.pitch = params.pitch * 1.06; // warm, gentle, melodious
-    } else if (voiceName === 'Puck') {
-      utterance.pitch = params.pitch * 1.25; // cheerful & bright
-    } else if (voiceName === 'Charon') {
-      utterance.pitch = params.pitch * 0.82; // deep & calm
-    } else {
-      utterance.pitch = params.pitch;
+    if (!('speechSynthesis' in window)) {
+      console.warn('[Happy AI] Speech synthesis not supported');
+      return;
     }
 
-    // Pick best matching voice
-    const voices = window.speechSynthesis.getVoices();
-    let preferredVoice = null;
-
-    if (voiceName === 'Aoede' || voiceName === 'Kore') {
-      // Gentle warm female tone for Aoede
-      preferredVoice = voices.find(v => (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Victoria')) && v.lang.startsWith('en'));
-    } else if (voiceName === 'Puck') {
-      preferredVoice = voices.find(v => (v.name.includes('Junior') || v.name.includes('Zira') || v.name.includes('Google')) && v.lang.startsWith('en'));
-    } else if (voiceName === 'Charon' || voiceName === 'Fenrir') {
-      preferredVoice = voices.find(v => (v.name.includes('David') || v.name.includes('Male') || v.name.includes('Google')) && v.lang.startsWith('en'));
-    }
-
-    if (!preferredVoice) {
-      preferredVoice = voices.find(v => v.lang.startsWith('en'));
-    }
-
-    if (preferredVoice) utterance.voice = preferredVoice;
-
-    utterance.onstart = () => {
-      this.isSpeaking = true;
-      if (this.visualizer) this.visualizer.classList.add('active');
-    };
-
-    utterance.onend = () => {
+    try {
+      window.speechSynthesis.cancel();
       this.stopSpeaking();
-    };
 
-    utterance.onerror = () => {
-      this.stopSpeaking();
-    };
+      // Clean emojis and symbols that crash Windows Chrome TTS
+      const cleanText = text
+        .replace(/[*#_~`]/g, '')
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/[^\x00-\x7F]/g, ' ') // Strip non-ASCII/emojis for rock-solid Chrome speech
+        .replace(/\s+/g, ' ')
+        .trim();
 
-    window.speechSynthesis.speak(utterance);
+      if (!cleanText) return;
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      this.currentUtterance = utterance; // Prevent garbage collection in Chrome!
+
+      const params = window.settingsManager ? window.settingsManager.getVoiceParams() : { rate: 1.0, pitch: 1.1 };
+      const voiceName = window.settingsManager ? window.settingsManager.getVoiceName() : 'Aoede';
+
+      utterance.rate = Math.max(0.8, Math.min(1.4, params.rate || 1.0));
+      utterance.pitch = Math.max(0.8, Math.min(1.4, params.pitch || 1.1));
+
+      // Voice selection
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        let preferredVoice = null;
+        if (voiceName === 'Aoede' || voiceName === 'Kore') {
+          preferredVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Victoria')) && v.lang.startsWith('en'))
+            || voices.find(v => v.lang.startsWith('en'));
+        } else if (voiceName === 'Charon') {
+          preferredVoice = voices.find(v => (v.name.includes('David') || v.name.includes('Male') || v.name.includes('Guy')) && v.lang.startsWith('en'))
+            || voices.find(v => v.lang.startsWith('en'));
+        } else {
+          preferredVoice = voices.find(v => v.lang.startsWith('en'));
+        }
+        if (preferredVoice) utterance.voice = preferredVoice;
+      }
+
+      utterance.onstart = () => {
+        this.isSpeaking = true;
+        if (this.visualizer) this.visualizer.classList.add('active');
+      };
+
+      utterance.onend = () => {
+        this.stopSpeaking();
+      };
+
+      utterance.onerror = (e) => {
+        console.warn('[Happy AI] SpeechSynthesis utterance error:', e);
+        this.stopSpeaking();
+      };
+
+      // Workaround for Chrome paused speech state
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('[Happy AI] speakText error:', err);
+    }
   }
 
   stopSpeaking() {
