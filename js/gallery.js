@@ -135,7 +135,13 @@ class DriveGallery {
       this.embedViewer.style.display = 'block';
       this.embedViewer.innerHTML = `
         <div class="drive-cinema-frame">
-          <iframe src="${embedUrl}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+          <iframe src="${embedUrl}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        </div>
+        <div class="drive-viewer-actions" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 0.78rem; color: var(--text-muted);">💡 If video doesn't play inside the frame, ensure link sharing is set to "Anyone with the link can view".</span>
+          <a href="${url}" target="_blank" rel="noopener noreferrer" class="drive-open-external-btn" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: var(--rose-700); text-decoration: none; padding: 6px 14px; background: #ffffff; border: 1px solid var(--rose-200); border-radius: 999px; box-shadow: var(--shadow-sm); transition: all 0.2s ease;">
+            <span>Open in Google Drive</span> ↗
+          </a>
         </div>
       `;
     }
