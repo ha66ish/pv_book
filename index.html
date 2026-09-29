@@ -271,51 +271,46 @@
          ------------------------------------------------------------------------ -->
     <section id="view-gallery" class="view-section">
       <div class="section-hero">
-        <span class="section-tag"><i class="fa-brands fa-google-drive"></i> Google Drive Cloud Gallery</span>
-        <h2 class="section-title">Varshini's <span>Drive Gallery</span></h2>
-        <p class="section-desc">Stream and view your private Google Drive video memories and clips seamlessly.</p>
+        <span class="section-tag"><i class="fa-solid fa-clapperboard"></i> Special Video Memories</span>
+        <h2 class="section-title">Varshini's <span>Video Clips</span></h2>
+        <p class="section-desc">Curated video memories and stage moments for Priyavarshini. Tap any clip to watch in seamless mobile-first cinema mode.</p>
       </div>
 
-      <!-- Google Drive Link Connector Bar -->
+      <!-- Quick Clip Connector Bar -->
       <div class="drive-connector-card">
         <div class="drive-input-row">
           <div class="drive-icon-badge">
             <i class="fa-brands fa-google-drive"></i>
           </div>
-          <input type="url" id="drive-primary-url" placeholder="Paste your Google Drive video or folder link here (e.g. drive.google.com/file/d/...)..." class="drive-url-input">
+          <input type="url" id="drive-primary-url" placeholder="Paste Google Drive video or folder link to add a clip..." class="drive-url-input">
           <button type="button" id="connect-drive-btn" class="drive-action-btn primary">
-            <i class="fa-solid fa-link"></i>
-            <span>Connect Drive</span>
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Clip</span>
           </button>
-          <button type="button" id="open-drive-external-btn" class="drive-action-btn secondary" title="Open Drive in new tab">
+          <button type="button" id="open-drive-external-btn" class="drive-action-btn secondary" title="Open Google Drive">
             <i class="fa-solid fa-arrow-up-right-from-square"></i>
           </button>
         </div>
         <div class="drive-connector-hint">
-          <span><i class="fa-solid fa-circle-info"></i> Make sure the Google Drive link is set to "Anyone with the link can view".</span>
+          <span><i class="fa-solid fa-circle-info"></i> Ensure link sharing is set to "Anyone with the link can view".</span>
           <button type="button" id="open-add-video-btn" class="add-clip-pill-btn">
-            <i class="fa-solid fa-plus"></i> Add Clip
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Custom Title & Note
           </button>
         </div>
       </div>
 
-      <!-- Drive Embedded Cinema Screen -->
-      <div id="drive-embed-viewer" class="drive-embed-viewer" style="display:none;">
-        <!-- Embedded Iframe rendered by gallery.js -->
-      </div>
-
-      <!-- Empty State when no Drive link is connected yet -->
-      <div id="drive-empty-placeholder" class="drive-empty-placeholder">
+      <!-- Empty State when no clips exist -->
+      <div id="drive-empty-placeholder" class="drive-empty-placeholder" style="display:none;">
         <div class="drive-empty-icon">
-          <i class="fa-brands fa-google-drive"></i>
+          <i class="fa-solid fa-film"></i>
         </div>
-        <h3>Google Drive Gallery Ready</h3>
-        <p>No Google Drive link connected yet. Simply paste your Google Drive folder or video link above and click <strong>"Connect Drive"</strong> to watch your special moments right here!</p>
+        <h3>No Video Clips Added Yet</h3>
+        <p>Paste a Google Drive video link above and click <strong>"Add Clip"</strong> to save a special memory here!</p>
       </div>
 
-      <!-- Extra Drive Clips List -->
+      <!-- Video Clips Media Grid -->
       <div class="drive-video-cards-grid" id="drive-video-cards-grid">
-        <!-- Rendered dynamically by gallery.js -->
+        <!-- Rendered dynamically with neat cover posters by gallery.js -->
       </div>
     </section>
 
@@ -558,16 +553,25 @@
   <div id="video-player-modal">
     <div class="cinema-container">
       <div class="cinema-header">
-        <h3 class="cinema-title" id="cinema-player-title">Memory Video</h3>
-        <button id="cinema-close-btn" class="reader-ctrl-btn close-reader-btn">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <div class="cinema-title-wrap">
+          <span class="cinema-badge"><i class="fa-solid fa-play"></i> Now Playing</span>
+          <h3 class="cinema-title" id="cinema-player-title">Memory Video</h3>
+        </div>
+        <div class="cinema-actions-top">
+          <a id="cinema-external-link" href="#" target="_blank" rel="noopener noreferrer" class="cinema-pill-link" title="Open in Google Drive">
+            <i class="fa-brands fa-google-drive"></i> Open in Drive ↗
+          </a>
+          <button id="cinema-close-btn" class="cinema-close-btn" title="Close player">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
       <div class="cinema-media-frame" id="cinema-media-frame">
         <!-- Video or Iframe injected by gallery.js -->
       </div>
       <div class="cinema-body">
         <p id="cinema-player-desc"></p>
+        <span class="cinema-mobile-hint"><i class="fa-solid fa-mobile-screen"></i> Tip: Rotate phone or tap fullscreen inside player for theater view</span>
       </div>
     </div>
   </div>

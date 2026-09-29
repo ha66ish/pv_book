@@ -1,6 +1,6 @@
 /* ==========================================================================
-   VARSHINI'S GOOGLE DRIVE VIDEO GALLERY MODULE
-   Dedicated Google Drive integration, responsive embeds, & custom Drive links
+   VARSHINI'S VIDEO MEMORIES & CLIPS MODULE
+   Mobile-Optimized Video Grid, Custom Cover Posters, & Lightbox Cinema Player
    ========================================================================== */
 
 class DriveGallery {
@@ -8,11 +8,18 @@ class DriveGallery {
     this.primaryUrlInput = document.getElementById('drive-primary-url');
     this.connectBtn = document.getElementById('connect-drive-btn');
     this.openDriveBtn = document.getElementById('open-drive-external-btn');
-    this.embedViewer = document.getElementById('drive-embed-viewer');
     this.emptyPlaceholder = document.getElementById('drive-empty-placeholder');
     this.cardsContainer = document.getElementById('drive-video-cards-grid');
 
-    // Add modal elements
+    // Video Player Modal elements
+    this.playerModal = document.getElementById('video-player-modal');
+    this.playerFrame = document.getElementById('cinema-media-frame');
+    this.playerTitle = document.getElementById('cinema-player-title');
+    this.playerDesc = document.getElementById('cinema-player-desc');
+    this.playerExternalLink = document.getElementById('cinema-external-link');
+    this.playerCloseBtn = document.getElementById('cinema-close-btn');
+
+    // Add Video Modal elements
     this.addModal = document.getElementById('add-video-modal');
     this.openAddBtn = document.getElementById('open-add-video-btn');
     this.closeAddBtn = document.getElementById('close-add-modal-btn');
@@ -28,8 +35,18 @@ class DriveGallery {
   init() {
     this.loadState();
 
+    // Quick Add Bar button
     if (this.connectBtn) {
-      this.connectBtn.addEventListener('click', () => this.handleConnectPrimary());
+      this.connectBtn.addEventListener('click', () => this.handleQuickAddClip());
+    }
+
+    if (this.primaryUrlInput) {
+      this.primaryUrlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.handleQuickAddClip();
+        }
+      });
     }
 
     if (this.openDriveBtn) {
@@ -38,12 +55,12 @@ class DriveGallery {
         if (url) {
           window.open(url, '_blank');
         } else {
-          if (window.showToast) window.showToast('Please enter a Google Drive link first.');
+          window.open('https://drive.google.com', '_blank');
         }
       });
     }
 
-    // Modal bindings
+    // Modal bindings: Add Video Modal
     if (this.openAddBtn) {
       this.openAddBtn.addEventListener('click', () => {
         if (this.addModal) this.addModal.classList.add('active');
@@ -59,12 +76,71 @@ class DriveGallery {
     if (this.addForm) {
       this.addForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        this.handleAddDriveVideo();
+        this.handleCustomAddClip();
       });
     }
+
+    // Modal bindings: Cinema Player Modal
+    if (this.playerCloseBtn) {
+      this.playerCloseBtn.addEventListener('click', () => this.closePlayerModal());
+    }
+
+    if (this.playerModal) {
+      this.playerModal.addEventListener('click', (e) => {
+        if (e.target === this.playerModal) {
+          this.closePlayerModal();
+        }
+      });
+    }
+
+    // ESC key closes modals
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (this.playerModal && this.playerModal.classList.contains('active')) {
+          this.closePlayerModal();
+        }
+        if (this.addModal && this.addModal.classList.contains('active')) {
+          this.addModal.classList.remove('active');
+        }
+      }
+    });
   }
 
-  // Convert any Google Drive URL into an embeddable preview URL
+  /* --------------------------------------------------------------------------
+     CLEAN & BEAUTIFUL TITLE FORMATTING
+     -------------------------------------------------------------------------- */
+  beautifyTitle(rawTitle, url = '') {
+    if (!rawTitle || !rawTitle.trim()) {
+      if (url.includes('drive.google.com')) return "Varshini's Stage Spotlight 🌟";
+      return "Special Memory Clip 🎬";
+    }
+
+    let clean = rawTitle.trim();
+    // Strip common video extensions
+    clean = clean.replace(/\.(mp4|mov|avi|mkv|webm|wmv|m4v)$/i, '');
+    // Replace underscores, hyphens, and file noise with spaces
+    clean = clean.replace(/^[VID|IMG|MOV][-_0-9]+/i, '');
+    clean = clean.replace(/[_-]+/g, ' ').trim();
+
+    if (!clean) clean = "Varshini's Special Moment";
+
+    // Capitalize words nicely
+    clean = clean.split(' ')
+      .filter(w => w.length > 0)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+
+    // Add playful touch if no emoji present
+    if (!clean.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF]/)) {
+      clean += ' 🌟';
+    }
+
+    return clean;
+  }
+
+  /* --------------------------------------------------------------------------
+     URL & THUMBNAIL COVER PARSING
+     -------------------------------------------------------------------------- */
   formatDriveEmbedUrl(url) {
     if (!url) return '';
     const clean = url.trim();
@@ -92,9 +168,36 @@ class DriveGallery {
     return clean;
   }
 
+  getCoverImageForUrl(url, customCover = '') {
+    if (customCover && customCover.trim()) return customCover;
+
+    // Google Drive video thumbnail
+    const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (fileMatch && fileMatch[1]) {
+      // High-res Google Drive thumbnail
+      return `https://drive.google.com/thumbnail?id=${fileMatch[1]}&sz=w800`;
+    }
+
+    // YouTube thumbnail
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      let vidId = '';
+      if (url.includes('watch?v=')) vidId = url.split('watch?v=')[1].split('&')[0];
+      else if (url.includes('youtu.be/')) vidId = url.split('youtu.be/')[1].split('?')[0];
+      if (vidId) return `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
+    }
+
+    // Default warm aesthetic theater stage cover
+    return 'assets/images/stage_curtain_cover.jpg';
+  }
+
+  /* --------------------------------------------------------------------------
+     STATE & DATA LOADING
+     -------------------------------------------------------------------------- */
   loadState() {
     const savedPrimary = localStorage.getItem(this.primaryStorageKey) || '';
-    if (this.primaryUrlInput) this.primaryUrlInput.value = savedPrimary;
+    if (this.primaryUrlInput && savedPrimary) {
+      this.primaryUrlInput.value = savedPrimary;
+    }
 
     try {
       this.videos = JSON.parse(localStorage.getItem(this.videosStorageKey) || '[]');
@@ -102,91 +205,91 @@ class DriveGallery {
       this.videos = [];
     }
 
-    if (savedPrimary) {
-      this.renderPrimaryViewer(savedPrimary);
-    } else {
-      this.renderEmptyState();
+    // If videos list is empty, initialize with the saved primary clip or default stage spotlight
+    if (this.videos.length === 0) {
+      const initialUrl = savedPrimary || 'https://drive.google.com/file/d/1Gq_stage_memory/view';
+      this.videos = [
+        {
+          title: "Varshini's Stage Spotlight 🌟",
+          url: initialUrl,
+          desc: "A special stage moment captured with love & admiration for Priyavarshini.",
+          cover: "assets/images/stage_curtain_cover.jpg",
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        }
+      ];
+      localStorage.setItem(this.videosStorageKey, JSON.stringify(this.videos));
     }
 
     this.renderVideoCards();
   }
 
-  handleConnectPrimary() {
-    const url = (this.primaryUrlInput ? this.primaryUrlInput.value : '').trim();
-    if (!url) {
-      if (window.showToast) window.showToast('Please paste a Google Drive link.');
-      return;
-    }
-
-    localStorage.setItem(this.primaryStorageKey, url);
-    this.renderPrimaryViewer(url);
-
-    if (window.soundEngine) window.soundEngine.playHappyChirp();
-    if (window.showToast) {
-      window.showToast('Google Drive link connected successfully! 📁✨');
-    }
-  }
-
-  renderPrimaryViewer(url) {
-    const embedUrl = this.formatDriveEmbedUrl(url);
-
-    if (this.emptyPlaceholder) this.emptyPlaceholder.style.display = 'none';
-    if (this.embedViewer) {
-      this.embedViewer.style.display = 'block';
-      this.embedViewer.innerHTML = `
-        <div class="drive-cinema-frame">
-          <iframe src="${embedUrl}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
-        </div>
-        <div class="drive-viewer-actions" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <span style="font-size: 0.78rem; color: var(--text-muted);">💡 If video doesn't play inside the frame, ensure link sharing is set to "Anyone with the link can view".</span>
-          <a href="${url}" target="_blank" rel="noopener noreferrer" class="drive-open-external-btn" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: var(--rose-700); text-decoration: none; padding: 6px 14px; background: #ffffff; border: 1px solid var(--rose-200); border-radius: 999px; box-shadow: var(--shadow-sm); transition: all 0.2s ease;">
-            <span>Open in Google Drive</span> ↗
-          </a>
-        </div>
-      `;
-    }
-  }
-
-  renderEmptyState() {
-    if (this.embedViewer) this.embedViewer.style.display = 'none';
-    if (this.emptyPlaceholder) this.emptyPlaceholder.style.display = 'flex';
-  }
-
+  /* --------------------------------------------------------------------------
+     RENDER VIDEO CLIPS (MOBILE-FIRST GRID WITH NEAT POSTERS)
+     -------------------------------------------------------------------------- */
   renderVideoCards() {
     if (!this.cardsContainer) return;
     this.cardsContainer.innerHTML = '';
 
-    const countEl = document.getElementById('gallery-video-count');
-    if (countEl) {
-      countEl.textContent = `${this.videos.length} Drive Media Items`;
-    }
-
     if (this.videos.length === 0) {
+      if (this.emptyPlaceholder) this.emptyPlaceholder.style.display = 'flex';
       return;
+    } else {
+      if (this.emptyPlaceholder) this.emptyPlaceholder.style.display = 'none';
     }
 
     this.videos.forEach((item, index) => {
       const card = document.createElement('div');
-      card.className = 'drive-item-card';
-      const embedUrl = this.formatDriveEmbedUrl(item.url);
+      card.className = 'clip-item-card';
+
+      const safeTitle = item.title || "Varshini's Video Clip";
+      const safeDesc = item.desc || "Special memory clip for Priyavarshini.";
+      const coverUrl = this.getCoverImageForUrl(item.url, item.cover);
 
       card.innerHTML = `
-        <div class="drive-item-preview">
-          <iframe src="${embedUrl}" loading="lazy"></iframe>
+        <div class="clip-poster-wrap">
+          <img src="${coverUrl}" alt="${safeTitle}" class="clip-poster-img" onerror="this.src='assets/images/stage_curtain_cover.jpg'">
+          <div class="clip-poster-gradient"></div>
+          <div class="clip-play-badge" title="Watch Video">
+            <i class="fa-solid fa-play"></i>
+          </div>
+          <div class="clip-badge-pill">
+            <i class="fa-solid fa-film"></i> HD Memory
+          </div>
         </div>
-        <div class="drive-item-info">
-          <h4>${item.title}</h4>
-          <p>${item.desc || 'Google Drive Memory'}</p>
-          <div class="drive-item-footer">
-            <span><i class="fa-solid fa-clock"></i> ${item.date}</span>
-            <button class="remove-drive-item-btn" data-index="${index}" title="Remove memory">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
+        <div class="clip-info-content">
+          <h4 class="clip-title">${safeTitle}</h4>
+          <p class="clip-desc">${safeDesc}</p>
+          <div class="clip-card-footer">
+            <span class="clip-date"><i class="fa-regular fa-clock"></i> ${item.date || 'Memories'}</span>
+            <div class="clip-actions-group">
+              <button class="clip-watch-btn" title="Watch Clip">
+                <i class="fa-solid fa-play"></i> Watch
+              </button>
+              <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="clip-drive-link-btn" title="Open in Google Drive">
+                <i class="fa-brands fa-google-drive"></i>
+              </a>
+              <button class="remove-clip-btn" data-index="${index}" title="Remove Clip">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
           </div>
         </div>
       `;
 
-      const removeBtn = card.querySelector('.remove-drive-item-btn');
+      // Tap card or "Watch" button to open mobile-friendly lightbox player
+      const poster = card.querySelector('.clip-poster-wrap');
+      const watchBtn = card.querySelector('.clip-watch-btn');
+      
+      const openHandler = (e) => {
+        e.stopPropagation();
+        this.openPlayerModal(item);
+      };
+
+      if (poster) poster.addEventListener('click', openHandler);
+      if (watchBtn) watchBtn.addEventListener('click', openHandler);
+
+      // Remove button
+      const removeBtn = card.querySelector('.remove-clip-btn');
       if (removeBtn) {
         removeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -198,46 +301,108 @@ class DriveGallery {
     });
   }
 
-  handleAddDriveVideo() {
-    const title = (document.getElementById('new-vid-title').value || '').trim();
-    const url = (document.getElementById('new-vid-url').value || '').trim();
-    const desc = (document.getElementById('new-vid-desc').value || '').trim();
+  /* --------------------------------------------------------------------------
+     MOBILE-OPTIMIZED CINEMA LIGHTBOX PLAYER
+     -------------------------------------------------------------------------- */
+  openPlayerModal(item) {
+    if (!this.playerModal || !this.playerFrame) return;
 
-    if (!title || !url) return;
+    const embedUrl = this.formatDriveEmbedUrl(item.url);
 
+    if (this.playerTitle) this.playerTitle.textContent = item.title;
+    if (this.playerDesc) this.playerDesc.textContent = item.desc || 'Special video memory for Priyavarshini.';
+    if (this.playerExternalLink) this.playerExternalLink.href = item.url;
+
+    // Responsive 16:9 iframe injected on demand
+    this.playerFrame.innerHTML = `
+      <iframe src="${embedUrl}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>
+    `;
+
+    this.playerModal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Lock background scroll on mobile
+
+    if (window.soundEngine) window.soundEngine.playPageFlip();
+  }
+
+  closePlayerModal() {
+    if (!this.playerModal) return;
+
+    this.playerModal.classList.remove('active');
+    // Clear iframe to cut audio and free mobile RAM immediately
+    if (this.playerFrame) {
+      this.playerFrame.innerHTML = '';
+    }
+    document.body.style.overflow = ''; // Restore scroll
+  }
+
+  /* --------------------------------------------------------------------------
+     ADD VIDEO HANDLERS
+     -------------------------------------------------------------------------- */
+  handleQuickAddClip() {
+    const urlInput = this.primaryUrlInput;
+    if (!urlInput) return;
+    const url = urlInput.value.trim();
+
+    if (!url) {
+      if (window.showToast) window.showToast('Please paste a Google Drive video link.');
+      return;
+    }
+
+    const title = this.beautifyTitle('', url);
     const newItem = {
       title,
       url,
-      desc,
+      desc: "Special moment saved to Varshini's Video Gallery.",
+      cover: "assets/images/stage_curtain_cover.jpg",
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     };
 
     this.videos.unshift(newItem);
     localStorage.setItem(this.videosStorageKey, JSON.stringify(this.videos));
+    localStorage.setItem(this.primaryStorageKey, url);
+    urlInput.value = '';
 
-    // If primary was empty, set it
-    const currentPrimary = localStorage.getItem(this.primaryStorageKey);
-    if (!currentPrimary) {
-      localStorage.setItem(this.primaryStorageKey, url);
-      if (this.primaryUrlInput) this.primaryUrlInput.value = url;
-      this.renderPrimaryViewer(url);
+    this.renderVideoCards();
+
+    if (window.soundEngine) window.soundEngine.playHappyChirp();
+    if (window.showToast) window.showToast('Video clip added to gallery! 🎬✨');
+  }
+
+  handleCustomAddClip() {
+    const titleRaw = (document.getElementById('new-vid-title')?.value || '').trim();
+    const url = (document.getElementById('new-vid-url')?.value || '').trim();
+    const desc = (document.getElementById('new-vid-desc')?.value || '').trim();
+
+    if (!url) {
+      if (window.showToast) window.showToast('Please provide a video URL.');
+      return;
     }
 
+    const title = this.beautifyTitle(titleRaw, url);
+    const newItem = {
+      title,
+      url,
+      desc: desc || "Special memory clip for Priyavarshini.",
+      cover: "assets/images/stage_curtain_cover.jpg",
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    };
+
+    this.videos.unshift(newItem);
+    localStorage.setItem(this.videosStorageKey, JSON.stringify(this.videos));
     this.renderVideoCards();
 
     if (this.addModal) this.addModal.classList.remove('active');
     if (this.addForm) this.addForm.reset();
 
-    if (window.showToast) {
-      window.showToast('Drive memory added to gallery! 🎬');
-    }
+    if (window.soundEngine) window.soundEngine.playHappyChirp();
+    if (window.showToast) window.showToast('Custom video memory saved! 🎬');
   }
 
   removeVideo(index) {
     this.videos.splice(index, 1);
     localStorage.setItem(this.videosStorageKey, JSON.stringify(this.videos));
     this.renderVideoCards();
-    if (window.showToast) window.showToast('Item removed.');
+    if (window.showToast) window.showToast('Clip removed.');
   }
 }
 
