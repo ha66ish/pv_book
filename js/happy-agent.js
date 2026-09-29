@@ -94,6 +94,10 @@ class HappyVoiceAgent {
     // Sync initial language & voice settings
     this.syncSettings();
 
+    // Check initial voice agent enabled preference (Default disabled: Work in Progress)
+    const savedEnabled = localStorage.getItem('pv_voice_agent_enabled');
+    this.setEnabled(savedEnabled === 'true');
+
     // Initial greeting message
     const isTamil = (window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN') === 'ta-IN';
     const initialGreeting = isTamil 
@@ -101,6 +105,24 @@ class HappyVoiceAgent {
       : "Hi Priya! 👋 I'm Happy, your smart companion with Gemini model voice created by Harish S. Tap the mic to speak live or type below!";
 
     this.addMessage("agent", initialGreeting);
+  }
+
+  /* --------------------------------------------------------------------------
+     ENABLE / DISABLE AGENT CONTROLLER (Work in Progress feature)
+     -------------------------------------------------------------------------- */
+  setEnabled(enabled) {
+    this.isEnabled = !!enabled;
+    if (!this.widget) return;
+    if (this.isEnabled) {
+      this.widget.style.display = 'block';
+    } else {
+      this.cutOffAllInteraction('agent_disabled');
+      this.closePanel();
+      this.widget.style.display = 'none';
+      if (this.greetingBubble) {
+        this.greetingBubble.style.display = 'none';
+      }
+    }
   }
 
   /* --------------------------------------------------------------------------

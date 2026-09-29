@@ -143,7 +143,7 @@ const STORY_DATA = {
             <strong>You grew through it.</strong>
           </div>
           <p class="story-paragraph">And one day, you'll stand in the sunlight, look at everything you've achieved, and quietly smile—</p>
-          <h2 class="story-final-smile">“I knew I could.” ❤️</h2>
+          <h2 class="story-final-smile">“I knew I could.” ✨</h2>
           <div class="story-signature">
             Rooting for you always, Priya! 🌿<br>
             <span style="font-size: 0.95rem; font-family: var(--font-sans); color: #9c6c21; font-weight: 700; display: block; margin-top: 0.35rem;">— Author: Harish S.</span>
@@ -457,7 +457,7 @@ class BookReader {
 
           <div class="story-comments-wrapper standalone-comments-page">
             <div class="guestbook-reaction-prompt">
-              <i class="fa-solid fa-heart" style="color:var(--rose-primary);"></i> How did the story make you feel?
+              <i class="fa-solid fa-pen-nib" style="color:var(--rose-primary);"></i> How did the story make you feel?
             </div>
 
             <div class="emoji-reaction-picker" id="reaction-picker">

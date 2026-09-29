@@ -57,12 +57,17 @@ class IntroLetterManager {
       }
     });
 
-    // Embedded on-page letter toggle
-    const embeddedCard = document.getElementById('page-embedded-letter');
-    const togglePageLetterBtn = document.getElementById('page-letter-toggle-btn');
-    if (embeddedCard && togglePageLetterBtn) {
-      togglePageLetterBtn.addEventListener('click', () => {
-        embeddedCard.classList.toggle('collapsed');
+    // Mini on-page letter card (compact bar): opens full letter modal
+    const miniCard = document.getElementById('mini-letter-card');
+    if (miniCard) {
+      miniCard.addEventListener('click', () => {
+        this.open(true);
+      });
+      miniCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.open(true);
+        }
       });
     }
 

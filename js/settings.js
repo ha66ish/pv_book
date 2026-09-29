@@ -10,13 +10,15 @@ const SETTINGS_KEYS = {
   LANGUAGE: 'pv_gemini_language',
   SYSTEM_PROMPT: 'pv_system_prompt',
   VOICE_RATE: 'pv_voice_rate',
-  VOICE_PITCH: 'pv_voice_pitch'
+  VOICE_PITCH: 'pv_voice_pitch',
+  VOICE_AGENT_ENABLED: 'pv_voice_agent_enabled'
 };
 
 const DEFAULT_SETTINGS = {
   model: 'gemini-3.1-live',
   voiceName: 'Zephyr',
   language: 'en-IN',
+  voiceAgentEnabled: false,
   systemPrompt: `You are Happy, a witty, funny, cheerful, and loyal AI companion mascot created by Harish S. for Priyavarshini (affectionately called Priya or Varshini). 
 Harish S. is the author of the story 'Still Rooted' and built this entire web sanctuary for her.
 Your personality:
@@ -32,6 +34,7 @@ Your personality:
 
 class SettingsManager {
   constructor() {
+    this.voiceAgentToggle = document.getElementById('settings-voice-agent-toggle');
     this.apiKeyInput = document.getElementById('settings-api-key');
     this.modelSelect = document.getElementById('settings-model-select');
     this.voiceSelect = document.getElementById('settings-voice-select');
@@ -51,6 +54,19 @@ class SettingsManager {
 
   init() {
     this.loadSettings();
+
+    if (this.voiceAgentToggle) {
+      this.voiceAgentToggle.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked;
+        localStorage.setItem(SETTINGS_KEYS.VOICE_AGENT_ENABLED, isEnabled ? 'true' : 'false');
+        if (window.happyAgent && typeof window.happyAgent.setEnabled === 'function') {
+          window.happyAgent.setEnabled(isEnabled);
+        }
+        if (window.showToast) {
+          window.showToast(isEnabled ? 'Happy Voice Mascot Enabled! 🤖✨' : 'Happy Voice Mascot Disabled (Work in Progress)');
+        }
+      });
+    }
 
     if (this.rateSlider && this.rateValueDisplay) {
       this.rateSlider.addEventListener('input', (e) => {
@@ -76,6 +92,15 @@ class SettingsManager {
   }
 
   loadSettings() {
+    const savedAgent = localStorage.getItem(SETTINGS_KEYS.VOICE_AGENT_ENABLED);
+    const isAgentEnabled = (savedAgent === 'true');
+    if (this.voiceAgentToggle) {
+      this.voiceAgentToggle.checked = isAgentEnabled;
+    }
+    if (window.happyAgent && typeof window.happyAgent.setEnabled === 'function') {
+      window.happyAgent.setEnabled(isAgentEnabled);
+    }
+
     const savedKey = localStorage.getItem(SETTINGS_KEYS.API_KEY) || '';
     let savedModel = localStorage.getItem(SETTINGS_KEYS.MODEL) || DEFAULT_SETTINGS.model;
     if (savedModel !== 'gemini-3.1-live' && savedModel !== 'gemini-3.8-live') {
@@ -104,6 +129,14 @@ class SettingsManager {
   }
 
   saveSettings() {
+    if (this.voiceAgentToggle) {
+      const isEnabled = this.voiceAgentToggle.checked;
+      localStorage.setItem(SETTINGS_KEYS.VOICE_AGENT_ENABLED, isEnabled ? 'true' : 'false');
+      if (window.happyAgent && typeof window.happyAgent.setEnabled === 'function') {
+        window.happyAgent.setEnabled(isEnabled);
+      }
+    }
+
     const key = (this.apiKeyInput ? this.apiKeyInput.value : '').trim();
     const model = this.modelSelect ? this.modelSelect.value : DEFAULT_SETTINGS.model;
     const voice = this.voiceSelect ? this.voiceSelect.value : DEFAULT_SETTINGS.voiceName;
@@ -133,6 +166,10 @@ class SettingsManager {
       const langLabel = lang === 'ta-IN' ? 'Tamil' : 'Indian English';
       window.showToast(`Settings Saved! Voice: ${voice} • ${langLabel} ✨`);
     }
+  }
+
+  isVoiceAgentEnabled() {
+    return localStorage.getItem(SETTINGS_KEYS.VOICE_AGENT_ENABLED) === 'true';
   }
 
   updateStatusDisplay() {
