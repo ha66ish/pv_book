@@ -1,7 +1,7 @@
 /* ==========================================================================
    AI VOICE AGENT: "HAPPY"
    Gemini Neural Model Voice Engine (Zephyr / Aoede / Puck / Charon)
-   Native Web Audio API (No Browser SpeechSynthesis) + Tamil & Indian English
+   Studio-Grade HTML5 Audio Engine + Mozhi-Inspired Natural Tamil & English Cadence
    ========================================================================== */
 
 class HappyVoiceAgent {
@@ -31,9 +31,9 @@ class HappyVoiceAgent {
     this.currentThinkingBubble = null;  // Thinking DOM element
     this.autoRestartTimer = null;       // Restart listening timer
     
-    // Web Audio Context for Gemini Neural Audio (No browser voice)
-    this.audioCtx = null;
-    this.currentAudioSource = null;
+    // Studio Audio Player (Clean Native HTML5 Audio with Pitch Preservation)
+    this.currentAudioElement = null;
+    this.currentBlobUrl = null;
 
     this.init();
   }
@@ -97,7 +97,7 @@ class HappyVoiceAgent {
     // Initial greeting message
     const isTamil = (window.settingsManager ? window.settingsManager.getLanguage() : 'en-IN') === 'ta-IN';
     const initialGreeting = isTamil 
-      ? "வணக்கம் பிரியா! 👋 நான் ஹேப்பி, Harish S. உருவாக்கிய உங்கள் AI துணைவன். என்னோடு பேச மைக் பட்டனைத் தட்டுங்கள்!"
+      ? "வணக்கம் பிரியா! 👋 நான் தான் ஹேப்பி, Harish S. உருவாக்கிய உங்கள் AI நண்பன்! என்னோடு பேச மைக் பட்டனைத் தட்டுங்கள்!"
       : "Hi Priya! 👋 I'm Happy, your smart companion with Gemini model voice created by Harish S. Tap the mic to speak live or type below!";
 
     this.addMessage("agent", initialGreeting);
@@ -182,18 +182,19 @@ class HappyVoiceAgent {
   cutOffAllInteraction(reason = 'user') {
     console.log(`[Happy AI] ⏹️ Immediate cut-off (${reason})`);
 
-    // 1. Instantly silence Gemini model audio playback
-    if (this.currentAudioSource) {
+    // 1. Instantly silence and terminate HTML5 Audio
+    if (this.currentAudioElement) {
       try {
-        this.currentAudioSource.stop(0);
-        this.currentAudioSource.disconnect();
+        this.currentAudioElement.pause();
+        this.currentAudioElement.currentTime = 0;
       } catch (e) {}
-      this.currentAudioSource = null;
+      this.currentAudioElement = null;
     }
-    if (this.audioCtx && this.audioCtx.state === 'running') {
+    if (this.currentBlobUrl) {
       try {
-        this.audioCtx.suspend();
+        URL.revokeObjectURL(this.currentBlobUrl);
       } catch (e) {}
+      this.currentBlobUrl = null;
     }
     this.isSpeaking = false;
 
@@ -206,7 +207,7 @@ class HappyVoiceAgent {
     // 3. Instantly abort microphone speech recognition
     if (this.recognition) {
       try {
-        this.recognition.abort(); // abort() kills mic stream instantly
+        this.recognition.abort(); // abort() terminates mic stream instantly
       } catch (e) {}
     }
     this.isListening = false;
@@ -459,14 +460,14 @@ class HappyVoiceAgent {
       return;
     }
 
-    // Multi-model text generation cascade (ultra-fast, zero-503 models)
-    const textModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
+    // High availability models (tested on v1beta)
+    const textModels = ['gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-flash-lite-latest'];
 
     let languageDirective = "";
     if (lang === 'ta-IN') {
-      languageDirective = "IMPORTANT: You MUST respond in warm, natural conversational Tamil (or Tanglish that sounds completely natural when spoken aloud). Example: 'வணக்கம் பிரியா! நான் ஹேப்பி. உங்களுக்கு என்ன உதவி வேணும்?'. Keep it concise and witty (1 to 2 short sentences).";
+      languageDirective = "IMPORTANT: Respond in warm, natural colloquial Tamil with friendly conversational flow (e.g. 'வணக்கம் பிரியா! எப்படி இருக்கீங்க?'). Keep it concise and witty (1 to 2 short sentences).";
     } else {
-      languageDirective = "IMPORTANT: You MUST respond in natural, friendly Indian English. Keep responses witty, warm, concise, and helpful (1 to 3 short sentences max). Never be overly dramatic; be a great, funny, loyal companion.";
+      languageDirective = "IMPORTANT: Respond in natural, friendly Indian English. Keep responses witty, warm, concise, and helpful (1 to 3 short sentences max). Be a great, funny, loyal companion.";
     }
 
     const promptInstruction = `SYSTEM INSTRUCTION: You are Happy, a cheerful, witty AI companion created by Harish S. for Priyavarshini (Priya). Speak with warm ${voiceName} tone. ${languageDirective}\n\nUSER MESSAGE: ${userText}`;
@@ -523,24 +524,76 @@ class HappyVoiceAgent {
   }
 
   /* --------------------------------------------------------------------------
-     GEMINI NEURAL MODEL AUDIO GENERATION & WEB AUDIO PLAYBACK
-     (Uses Gemini TTS: gemini-3.8-flash-lite-tts / gemini-3.8-flash-tts / Zephyr)
+     MOZHI-INSPIRED NATURAL PRONUNCIATION FORMATTING
+     Ensures neural TTS models articulate Tamil and Indian English smoothly
+     -------------------------------------------------------------------------- */
+  formatSpokenScript(text) {
+    if (!text) return "";
+    let clean = text.replace(/[*#_~`]/g, '').replace(/https?:\/\/\S+/g, '').trim();
+
+    // Check if text contains Tamil characters
+    const hasTamil = /[\u0B80-\u0BFF]/.test(clean);
+
+    if (hasTamil) {
+      // Natural conversational phonetic dictionary mapping for fluent Tamil speech
+      const tamilMap = [
+        [/வணக்கம்/g, 'Vanakkam'],
+        [/பிரியா/g, 'Priya'],
+        [/எப்படி/g, 'eppadi'],
+        [/இருக்கீங்க|இருக்கிறீர்கள்/g, 'irukkeenga'],
+        [/நலமாக/g, 'nalamaaga'],
+        [/நான்/g, 'naan'],
+        [/ஹேப்பி/g, 'Happy'],
+        [/உங்கள்|உங்க/g, 'unga'],
+        [/நண்பன்|தோழன்/g, 'friend'],
+        [/உதவி/g, 'uthavi'],
+        [/வேணும்|வேண்டும்/g, 'venum'],
+        [/சொல்லுங்க/g, 'sollunga'],
+        [/கதை/g, 'kathai'],
+        [/திறக்கிறேன்/g, 'thirakiren'],
+        [/இப்போதே/g, 'ippothae'],
+        [/போகலாம்/g, 'pogalaam'],
+        [/அத்தியாயம்/g, 'Chapter'],
+        [/கவலைப்படாதீங்க/g, 'kavalai padaatheenga'],
+        [/மூச்சு/g, 'moochu'],
+        [/விடுங்கள்/g, 'vidunga'],
+        [/சிரி/g, 'siri'],
+        [/நன்றி/g, 'nandri'],
+        [/உருவாக்கினார்/g, 'create panninaaru'],
+        [/அழகான/g, 'azhagaana'],
+        [/நம்பிக்கை/g, 'nambikkai'],
+        [/சிந்தனை/g, 'yosanai'],
+        [/மரங்கள்/g, 'marangal'],
+        [/புயல்/g, 'puyal'],
+        [/தாங்கும்/g, 'thaangum'],
+        [/சக்தி/g, 'sakthi']
+      ];
+
+      for (const [pattern, replacement] of tamilMap) {
+        clean = clean.replace(pattern, replacement);
+      }
+    }
+
+    // Direct Gemini 3.8 TTS with directorial performance cues for human-like warmth
+    return `[Direction: Speak warmly, smiling, friendly, and naturally with human-like conversational cadence and relaxed pace] ${clean}`;
+  }
+
+  /* --------------------------------------------------------------------------
+     GEMINI NEURAL MODEL AUDIO GENERATION & STUDIO HTML5 AUDIO PLAYBACK
      -------------------------------------------------------------------------- */
   async generateAndPlayGeminiVoice(text) {
     const apiKey = window.settingsManager ? window.settingsManager.getApiKey() : '';
     const voiceName = window.settingsManager ? window.settingsManager.getVoiceName() : 'Zephyr';
     const pace = window.settingsManager ? window.settingsManager.getVoicePace() : 1.0;
 
-    // If no API key is provided, we inform the user to configure the key in settings
     if (!apiKey || apiKey.length < 8) {
       console.warn('[Happy AI] No Gemini API Key configured for neural voice.');
-      if (window.showToast) window.showToast('Add Gemini API Key in Settings for real Zephyr model voice! 🔑');
+      if (window.showToast) window.showToast('Configure Gemini API Key in Settings for real Zephyr model voice! 🔑');
       return;
     }
 
-    // Clean text to avoid special character errors in TTS
-    const cleanText = text.replace(/[*#_~`]/g, '').replace(/https?:\/\/\S+/g, '').trim();
-    if (!cleanText) return;
+    // Prepare speech script with natural conversational prosody
+    const speechScript = this.formatSpokenScript(text);
 
     // Available TTS models in order of speed and capability
     const ttsModels = [
@@ -553,7 +606,7 @@ class HappyVoiceAgent {
     const ttsPayload = {
       contents: [
         {
-          parts: [{ text: cleanText }]
+          parts: [{ text: speechScript }]
         }
       ],
       generationConfig: {
@@ -577,7 +630,7 @@ class HappyVoiceAgent {
         console.log(`[Happy AI] Synthesizing voice with model: ${ttsModel} (${voiceName} voice)...`);
         
         const ttsAbort = new AbortController();
-        const timeoutId = setTimeout(() => ttsAbort.abort(), 7000);
+        const timeoutId = setTimeout(() => ttsAbort.abort(), 7500);
 
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${ttsModel}:generateContent?key=${apiKey}`, {
           method: 'POST',
@@ -595,9 +648,9 @@ class HappyVoiceAgent {
           
           if (audioPart) {
             const base64Audio = audioPart.inlineData.data;
-            const mimeType = audioPart.inlineData.mimeType || 'audio/L16;codec=pcm;rate=24000';
+            const mimeType = audioPart.inlineData.mimeType || 'audio/wav';
             
-            console.log(`[Happy AI] 🎙️ Gemini audio received (${mimeType}). Playing via Web Audio API...`);
+            console.log(`[Happy AI] 🎙️ Gemini audio received (${mimeType}). Playing neatly via Studio Audio Engine...`);
             await this.playGeminiAudio(base64Audio, mimeType, pace);
             audioPlayed = true;
             break;
@@ -612,7 +665,6 @@ class HappyVoiceAgent {
 
     if (!audioPlayed) {
       console.warn('[Happy AI] Could not generate audio from Gemini TTS models.');
-      // If in continuous live mode and audio failed to play, auto-listen again
       if (this.liveVoiceMode && this.isOpen) {
         this.scheduleRestartListening(400);
       }
@@ -620,20 +672,27 @@ class HappyVoiceAgent {
   }
 
   /* --------------------------------------------------------------------------
-     WEB AUDIO API PLAYER: Decodes 24kHz PCM or WAV & plays with pace mapping
+     STUDIO AUDIO PLAYER: Native HTML5 Audio with Preserved Pitch & Fast Cut-Off
      -------------------------------------------------------------------------- */
-  playGeminiAudio(base64Data, mimeType = 'audio/L16;codec=pcm;rate=24000', pace = 1.0) {
-    return new Promise(async (resolve) => {
+  playGeminiAudio(base64Data, mimeType = 'audio/wav', pace = 1.0) {
+    return new Promise((resolve) => {
       try {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!this.audioCtx || this.audioCtx.state === 'closed') {
-          this.audioCtx = new AudioContextClass();
+        // Cut off any existing playing audio
+        if (this.currentAudioElement) {
+          try {
+            this.currentAudioElement.pause();
+            this.currentAudioElement.currentTime = 0;
+          } catch (e) {}
+          this.currentAudioElement = null;
         }
-        if (this.audioCtx.state === 'suspended') {
-          await this.audioCtx.resume();
+        if (this.currentBlobUrl) {
+          try {
+            URL.revokeObjectURL(this.currentBlobUrl);
+          } catch (e) {}
+          this.currentBlobUrl = null;
         }
 
-        // Convert base64 to binary byte array
+        // Convert base64 string to Uint8Array
         const binaryString = atob(base64Data);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
@@ -641,46 +700,41 @@ class HappyVoiceAgent {
           bytes[i] = binaryString.charCodeAt(i);
         }
 
-        let audioBuffer;
+        let audioBytes = bytes;
+        let finalMime = mimeType;
 
-        // If raw PCM (16-bit little-endian, usually 24000Hz)
-        if (mimeType.includes('pcm') || mimeType.includes('L16')) {
-          let sampleRate = 24000;
-          const rateMatch = mimeType.match(/rate=(\d+)/);
-          if (rateMatch && rateMatch[1]) {
-            sampleRate = parseInt(rateMatch[1], 10);
-          }
-
-          const int16Array = new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2));
-          audioBuffer = this.audioCtx.createBuffer(1, int16Array.length, sampleRate);
-          const channelData = audioBuffer.getChannelData(0);
-          for (let i = 0; i < int16Array.length; i++) {
-            channelData[i] = int16Array[i] / 32768.0; // Float32 conversion (-1.0 to 1.0)
-          }
-        } else {
-          // Encoded container (WAV, MP3, etc.)
-          audioBuffer = await this.audioCtx.decodeAudioData(bytes.buffer.slice(0));
+        // If raw PCM returned without RIFF header, prepend a clean 44-byte WAV header (24kHz, 16-bit, mono)
+        if (mimeType.includes('pcm') || mimeType.includes('L16') || (!bytes.slice(0, 4).toString().includes('RIFF') && bytes.length > 44)) {
+          audioBytes = this.createWavHeaderBuffer(bytes, 24000);
+          finalMime = 'audio/wav';
         }
 
-        // Create audio node
-        const source = this.audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        
-        // Apply voice pace directly to AudioBufferSourceNode!
-        source.playbackRate.value = Math.max(0.75, Math.min(1.35, pace));
-        source.connect(this.audioCtx.destination);
+        const blob = new Blob([audioBytes], { type: finalMime });
+        const blobUrl = URL.createObjectURL(blob);
+        this.currentBlobUrl = blobUrl;
 
-        this.currentAudioSource = source;
+        const audio = new Audio(blobUrl);
+
+        // Crucial for natural human sound: preserve pitch!
+        audio.preservesPitch = true;
+        // Clamp speed to natural bounds (0.85x to 1.25x)
+        audio.playbackRate = Math.max(0.85, Math.min(1.25, pace));
+
+        this.currentAudioElement = audio;
         this.isSpeaking = true;
         if (this.visualizer) this.visualizer.classList.add('active');
         this.updateStatusDisplay('speaking');
 
-        source.onended = () => {
+        audio.onended = () => {
           this.isSpeaking = false;
-          this.currentAudioSource = null;
+          this.currentAudioElement = null;
+          if (this.currentBlobUrl) {
+            URL.revokeObjectURL(this.currentBlobUrl);
+            this.currentBlobUrl = null;
+          }
           if (this.visualizer) this.visualizer.classList.remove('active');
 
-          // Live speak-to-speech loop: restart listening after audio ends!
+          // Live speak-to-speech loop
           if (this.liveVoiceMode && this.isOpen) {
             this.updateStatusDisplay('listening');
             this.scheduleRestartListening(400); // 400ms pause prevents echo
@@ -690,16 +744,66 @@ class HappyVoiceAgent {
           resolve();
         };
 
-        source.start(0);
+        audio.onerror = (e) => {
+          console.warn('[Happy AI] Audio element error:', e);
+          this.isSpeaking = false;
+          this.currentAudioElement = null;
+          if (this.visualizer) this.visualizer.classList.remove('active');
+          resolve();
+        };
+
+        audio.play().catch(playErr => {
+          console.warn('[Happy AI] Audio play exception:', playErr);
+          this.isSpeaking = false;
+          this.currentAudioElement = null;
+          if (this.visualizer) this.visualizer.classList.remove('active');
+          resolve();
+        });
 
       } catch (err) {
-        console.error('[Happy AI] playGeminiAudio playback error:', err);
+        console.error('[Happy AI] playGeminiAudio exception:', err);
         this.isSpeaking = false;
-        this.currentAudioSource = null;
-        if (this.visualizer) this.visualizer.classList.remove('active');
         resolve();
       }
     });
+  }
+
+  // Prepend standard RIFF WAV header for raw 16-bit 24kHz PCM audio
+  createWavHeaderBuffer(pcmData, sampleRate = 24000) {
+    const numChannels = 1;
+    const bitsPerSample = 16;
+    const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+    const blockAlign = (numChannels * bitsPerSample) / 8;
+    const dataSize = pcmData.length;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    // RIFF identifier
+    this.writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    this.writeString(view, 8, 'WAVE');
+    // format chunk identifier
+    this.writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitsPerSample, true);
+    // data chunk identifier
+    this.writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    // Copy PCM samples
+    new Uint8Array(buffer, 44).set(pcmData);
+    return new Uint8Array(buffer);
+  }
+
+  writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
   }
 
   /* --------------------------------------------------------------------------
@@ -714,7 +818,7 @@ class HappyVoiceAgent {
         return "வணக்கம் பிரியா! நலமாக இருக்கிறீர்களா? Harish S. உருவாக்கிய இந்த அழகான sanctuary-க்கு உங்களை வரவேற்கிறேன்! 🌸✨";
       }
       if (lower.includes('joke') || lower.includes('funny') || lower.includes('laugh') || lower.includes('சிரி')) {
-        return "ஏன் மரங்கள் எப்பவும் புத்திசாலியா இருக்கு தெரியுமா பிரியா? ஏன்னா அவைகளுக்கு ஸ்ட்ராங்கான 'Roots' இருக்கு! 'Still Rooted' போல! 😄🌿";
+        return "ஏன் மரங்கள் எப்பவும் புத்திசாலியா இருக்கு தெரியுமா பிரியா? ஏன்னா அவைகளுக்கு ஸ்ட்ராங்கான Roots இருக்கு! Still Rooted போல! 😄🌿";
       }
       if (lower.includes('hard day') || lower.includes('tired') || lower.includes('கஷ்டம்')) {
         return "கவலைப்படாதீங்க பிரியா! ஒரு மெதுவான மூச்சு விடுங்கள். எப்பேர்ப்பட்ட புயலையும் தாங்கும் சக்தி உங்களுக்கு இருக்கு! 🌿💪";
