@@ -1884,16 +1884,17 @@ html, body {
   color: var(--rose-primary);
 }
 
-.happy-mic-btn.listening {
-  background: #ff4757;
-  color: #fff;
-  box-shadow: 0 0 15px #ff4757;
-  animation: pulseMic 1.2s infinite;
+.happy-mic-btn.listening,
+.happy-mic-btn.live-active {
+  background: #ff4757 !important;
+  color: #fff !important;
+  box-shadow: 0 0 16px rgba(255, 71, 87, 0.7) !important;
+  animation: pulseMic 1.2s infinite ease-in-out;
 }
 
 @keyframes pulseMic {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 71, 87, 0.5); }
+  50% { transform: scale(1.18); box-shadow: 0 0 22px rgba(255, 71, 87, 0.9); }
 }
 
 .happy-send-btn {

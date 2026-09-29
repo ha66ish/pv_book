@@ -179,12 +179,16 @@ class SettingsManager {
       }
 
       // Find first available matching model in user's account
-      let targetModel = preferredCandidates.find(c => availableModels.includes(c));
-      if (!targetModel && availableModels.length > 0) {
-        targetModel = availableModels.find(m => m.includes('3.')) || availableModels[0];
-      }
+      const testCandidates = [
+        ...preferredCandidates.filter(c => availableModels.includes(c)),
+        'gemini-2.5-flash',
+        'gemini-flash-latest',
+        'gemini-3.5-flash'
+      ].filter(m => availableModels.includes(m));
 
-      // If a candidate model exists, test a quick ping
+      const targetModel = testCandidates[0] || availableModels[0];
+
+      // Test a quick ping to confirm active generation
       if (targetModel) {
         try {
           const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${key}`, {
