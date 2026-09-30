@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Priyavarshini Book Rack & Sanctuary</title>
   <meta name="description" content="A special interactive storybook and memory sanctuary crafted for Priyavarshini by Harish S.">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=priya-photo-zoom-v1">
 </head>
 <body>
 
@@ -103,12 +103,18 @@
   <header class="app-header">
     <div class="brand-wrapper" id="brand-home-btn">
       <div class="brand-profile-container">
-        <img src="assets/images/priya_profile.png" alt="Priyavarshini" class="brand-profile-avatar">
-        <span class="avatar-online-dot" title="Active"></span>
+        <button id="profile-menu-btn" class="brand-profile-trigger" aria-label="Open Priya's profile menu" aria-expanded="false" aria-controls="profile-menu">
+          <img src="assets/images/priya_profile.png" alt="Priyavarshini" class="brand-profile-avatar">
+          <span class="avatar-online-dot" title="Active"></span>
+        </button>
+        <div id="profile-menu" class="profile-menu" hidden>
+          <button type="button" id="profile-settings-btn"><i class="fa-solid fa-gear"></i> Settings</button>
+          <button type="button" id="profile-logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log out</button>
+        </div>
       </div>
       <div class="brand-text">
         <div class="brand-greeting-row">
-          <span class="system-time-greeting" id="system-time-greeting">Good morning, Priya ☀️</span>
+      <span class="system-time-greeting" id="system-time-greeting">Good morning, Priya ☀️</span>
         </div>
         <h1>Priyavarshini</h1>
         <span>Personal Book Rack & Gallery</span>
@@ -127,10 +133,10 @@
         <span class="tab-label-full">Varshini's Video Gallery</span>
         <span class="tab-label-short">Videos</span>
       </button>
-      <button class="nav-tab-btn" data-target="tab-settings">
-        <i class="fa-solid fa-gear"></i>
-        <span class="tab-label-full">Voice & Settings</span>
-        <span class="tab-label-short">Settings</span>
+      <button class="nav-tab-btn" data-target="tab-photos">
+        <i class="fa-regular fa-images"></i>
+        <span class="tab-label-full">Priya's Pictures</span>
+        <span class="tab-label-short">Pictures</span>
       </button>
     </nav>
 
@@ -146,11 +152,7 @@
       <button id="ambient-sound-btn" class="header-btn" title="Toggle soothing rain ambience">
         <i class="fa-solid fa-cloud-rain"></i>
       </button>
-      <div class="user-badge" id="header-user-badge">
-        <img src="assets/images/priya_profile.png" alt="Priya" class="user-badge-avatar">
-        <span id="user-greeting-pill">Hi, Priya</span>
-      </div>
-      <button id="logout-btn" class="header-btn" title="Logout">
+      <button id="logout-btn" class="header-btn legacy-logout-btn" title="Logout" aria-hidden="true" tabindex="-1">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
       </button>
     </div>
@@ -169,19 +171,6 @@
         <span class="section-tag"><i class="fa-solid fa-sparkles"></i> Featured Collection</span>
         <h2 class="section-title">Priyavarshini <span>Book Rack</span></h2>
         <p class="section-desc">Click on any book cover to open the interactive storybook with real page-turning animations and comic illustrations.</p>
-      </div>
-
-      <!-- Priya's Personal Letter Mini Card (Low space banner - opens full modal on click) -->
-      <div class="mini-letter-strip" id="mini-letter-card" role="button" tabindex="0" title="Click to open the full letter & sanctuary guide">
-        <div class="mini-strip-left">
-          <span class="mini-strip-tag"><i class="fa-solid fa-envelope-open-text"></i> SPECIAL DISPATCH</span>
-          <span class="mini-strip-title">Hey Ms. Priya Varshini! A special welcome message & sanctuary guide for you</span>
-        </div>
-        <div class="mini-strip-action">
-          <span class="mini-btn-full">Read Full Letter</span>
-          <span class="mini-btn-short">Letter</span>
-          <i class="fa-solid fa-arrow-up-right-from-square"></i>
-        </div>
       </div>
 
       <!-- The 3D Bookshelf Structure -->
@@ -296,26 +285,15 @@
         <p class="section-desc">Curated video memories and stage moments for Priyavarshini. Tap any clip to watch in seamless mobile-first cinema mode.</p>
       </div>
 
-      <!-- Quick Clip Connector Bar -->
-      <div class="drive-connector-card">
-        <div class="drive-input-row">
-          <div class="drive-icon-badge">
-            <i class="fa-brands fa-google-drive"></i>
-          </div>
-          <input type="url" id="drive-primary-url" placeholder="Paste Google Drive video or folder link to add a clip..." class="drive-url-input">
-          <button type="button" id="connect-drive-btn" class="drive-action-btn primary">
-            <i class="fa-solid fa-plus"></i>
-            <span>Add Clip</span>
-          </button>
-          <button type="button" id="open-drive-external-btn" class="drive-action-btn secondary" title="Open Google Drive">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          </button>
-        </div>
-        <div class="drive-connector-hint">
-          <span><i class="fa-solid fa-circle-info"></i> Ensure link sharing is set to "Anyone with the link can view".</span>
-          <button type="button" id="open-add-video-btn" class="add-clip-pill-btn">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Custom Title & Note
-          </button>
+      <div class="clip-add-area">
+        <button type="button" id="open-add-video-btn" class="clip-add-toggle" aria-expanded="false" aria-controls="inline-add-video-panel"><i class="fa-solid fa-plus"></i><span>Add a clip</span></button>
+        <div class="inline-add-video-panel" id="inline-add-video-panel" hidden>
+          <form id="add-video-form" class="inline-memory-form">
+            <label>Clip title<input type="text" id="new-vid-title" placeholder="A little moment" required></label>
+            <label>Video link<input type="url" id="new-vid-url" placeholder="Google Drive or YouTube link" required></label>
+            <label>Note <span class="optional-label">optional</span><textarea id="new-vid-desc" rows="2" placeholder="Add a short note"></textarea></label>
+            <button type="submit" class="inline-form-submit">Save clip</button>
+          </form>
         </div>
       </div>
 
@@ -325,13 +303,33 @@
           <i class="fa-solid fa-film"></i>
         </div>
         <h3>No Video Clips Added Yet</h3>
-        <p>Paste a Google Drive video link above and click <strong>"Add Clip"</strong> to save a special memory here!</p>
+        <p>Add a video memory to start your collection.</p>
       </div>
 
       <!-- Video Clips Media Grid -->
       <div class="drive-video-cards-grid" id="drive-video-cards-grid">
         <!-- Rendered dynamically with neat cover posters by gallery.js -->
       </div>
+    </section>
+
+    <section id="view-photos" class="view-section">
+      <div class="section-hero">
+        <span class="section-tag"><i class="fa-regular fa-images"></i> A little photo album</span>
+        <h2 class="section-title">Priya's <span>Pictures</span></h2>
+        <p class="section-desc">Favorite moments, gathered in one place.</p>
+      </div>
+      <div class="photo-gallery-toolbar">
+        <span id="photo-count-label">Your collection</span>
+        <button type="button" id="open-add-photo-btn" class="clip-add-toggle" aria-expanded="false" aria-controls="add-photo-form"><i class="fa-solid fa-plus"></i><span>Add a photo</span></button>
+      </div>
+      <form id="add-photo-form" class="inline-memory-form photo-add-form" hidden>
+        <label>Image path<input id="photo-image-path" type="text" placeholder="assets/images/priya-gallery/photo.jpg" required></label>
+        <label>Title<input id="photo-title" type="text" placeholder="A favorite moment" required></label>
+        <label>Description <span class="optional-label">optional</span><textarea id="photo-description" rows="2" placeholder="A little note about this photo"></textarea></label>
+        <button type="submit" class="inline-form-submit">Add photo</button>
+      </form>
+      <div id="photo-gallery-grid" class="photo-gallery-grid"></div>
+      <p class="photo-gallery-empty" id="photo-gallery-empty">Your album is ready. Add a photo from <code>assets/images/priya-gallery/</code> to begin.</p>
     </section>
 
     <!-- ------------------------------------------------------------------------
@@ -349,8 +347,8 @@
           <i class="fa-solid fa-wrench"></i>
         </div>
         <div class="settings-notice-text">
-          <h4>Don't change anything here, Harish will take care of this! 😄</h4>
-          <p>Priya, this technical area is managed behind the scenes by Harish S. You don't have to worry about API keys or model settings—just sit back, relax, and enjoy your book rack!</p>
+          <h4>Technical setup, taken care of</h4>
+          <p>Harish manages the voice model and connection settings here. The book rack and memories are ready to explore.</p>
         </div>
       </div>
 
@@ -374,7 +372,7 @@
             <div class="toggle-text-info">
               <label for="settings-voice-agent-toggle" class="toggle-main-label">Enable Voice Mascot</label>
               <p class="toggle-sub-label">
-                <i class="fa-solid fa-circle-info"></i> <strong>Work in progress — will launch once ready!</strong> When enabled, Happy appears at the bottom-right for live voice interactions. When disabled, the mascot is completely hidden from the sanctuary.
+                <i class="fa-solid fa-circle-info"></i> <strong>Live voice is still being built.</strong> Happy will appear here when the voice experience is ready.
               </p>
             </div>
             <label class="modern-switch" for="settings-voice-agent-toggle">
@@ -531,7 +529,7 @@
           <span>Tips</span>
         </button>
 
-        <span id="reader-page-indicator" style="font-size:0.82rem; color:var(--rose-dark); font-weight:700;">Page 1 of 8</span>
+        <span id="reader-page-indicator" aria-label="Page 1 of 8" title="Page 1 of 8" style="font-size:0.82rem; color:var(--rose-dark); font-weight:700;">1 / 8</span>
         
         <button id="reader-close-btn" class="reader-ctrl-btn close-reader-btn" title="Close book">
           <i class="fa-solid fa-xmark"></i>
@@ -622,35 +620,6 @@
         <p id="cinema-player-desc"></p>
         <span class="cinema-mobile-hint"><i class="fa-solid fa-mobile-screen"></i> Tip: Rotate phone or tap fullscreen inside player for theater view</span>
       </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================================
-       7. ADD VIDEO MODAL
-       ========================================================================== -->
-  <div id="add-video-modal">
-    <div class="modal-content-card">
-      <div class="modal-title-row">
-        <h3>Add Memory Video</h3>
-        <button id="close-add-modal-btn" class="reader-ctrl-btn close-reader-btn" title="Close">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <form id="add-video-form" class="auth-form">
-        <div class="input-group">
-          <label for="new-vid-title">Memory Title</label>
-          <input type="text" id="new-vid-title" placeholder="e.g. Varshini's Song" required>
-        </div>
-        <div class="input-group">
-          <label for="new-vid-url">Video URL (Google Drive / YouTube)</label>
-          <input type="url" id="new-vid-url" placeholder="https://drive.google.com/file/d/... or YouTube" required>
-        </div>
-        <div class="input-group">
-          <label for="new-vid-desc">Note & Fun Memory</label>
-          <textarea id="new-vid-desc" rows="3" placeholder="Write a fun memory or note about this clip..."></textarea>
-        </div>
-        <button type="submit" class="auth-btn">Save to Priya's Gallery</button>
-      </form>
     </div>
   </div>
 
@@ -874,7 +843,7 @@
   </div>
 
   <!-- Global Toast Notification -->
-  <div id="toast-notification">
+  <div id="toast-notification" role="status" aria-live="polite" aria-atomic="true">
     <i class="fa-solid fa-sparkles text-gold"></i>
     <span id="toast-text">Notification message</span>
   </div>
@@ -882,12 +851,13 @@
   <!-- Scripts -->
   <script src="js/audio.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/book.js"></script>
-  <script src="js/gallery.js"></script>
+  <script src="js/book.js?v=reader-compact-footer-top-reset-2"></script>
+  <script src="js/gallery.js?v=compact-add-form-v2"></script>
+  <script src="js/photos.js?v=priya-pictures-v6"></script>
   <script src="js/intro-letter.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/happy-agent.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=priya-pictures-profile-menu"></script>
 
 </body>
 </html>

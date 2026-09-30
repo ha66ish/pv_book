@@ -277,23 +277,20 @@ function initNavigation() {
   const views = {
     'tab-books': document.getElementById('view-books'),
     'tab-gallery': document.getElementById('view-gallery'),
+    'tab-photos': document.getElementById('view-photos'),
     'tab-settings': document.getElementById('view-settings')
+  };
+
+  const showView = (targetId) => {
+    tabBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.target === targetId));
+    Object.entries(views).forEach(([key, view]) => view?.classList.toggle('active', key === targetId));
   };
 
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const targetId = btn.getAttribute('data-target');
 
-      // Update button active state
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      // Update view active state
-      Object.keys(views).forEach(key => {
-        if (views[key]) {
-          views[key].classList.toggle('active', key === targetId);
-        }
-      });
+      showView(targetId);
 
       // Play soft click chime
       if (window.soundEngine) {
@@ -310,6 +307,38 @@ function initNavigation() {
       if (booksTabBtn) booksTabBtn.click();
     });
   }
+
+  const profileButton = document.getElementById('profile-menu-btn');
+  const profileMenu = document.getElementById('profile-menu');
+  const profileWrap = document.querySelector('.brand-profile-container');
+  const closeProfileMenu = () => {
+    if (!profileMenu || !profileButton) return;
+    profileMenu.hidden = true;
+    profileButton.setAttribute('aria-expanded', 'false');
+  };
+  profileButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const open = profileMenu.hidden;
+    profileMenu.hidden = !open;
+    profileButton.setAttribute('aria-expanded', String(open));
+  });
+  document.querySelector('.brand-profile-container')?.addEventListener('click', event => {
+    event.stopPropagation();
+    profileButton?.click();
+  });
+  profileMenu?.addEventListener('click', event => event.stopPropagation());
+  document.addEventListener('click', event => {
+    if (profileWrap && !profileWrap.contains(event.target)) closeProfileMenu();
+  });
+  window.addEventListener('keydown', event => { if (event.key === 'Escape') closeProfileMenu(); });
+  document.getElementById('profile-settings-btn')?.addEventListener('click', () => {
+    showView('tab-settings');
+    closeProfileMenu();
+  });
+  document.getElementById('profile-logout-btn')?.addEventListener('click', () => {
+    closeProfileMenu();
+    document.getElementById('logout-btn')?.click();
+  });
 
   // Ambient sound toggle button in header
   const soundBtn = document.getElementById('ambient-sound-btn');

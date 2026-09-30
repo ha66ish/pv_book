@@ -65,16 +65,14 @@ class DriveGallery {
       });
     }
 
-    // Modal bindings: Add Video Modal
+    // Compact inline add form
     if (this.openAddBtn) {
       this.openAddBtn.addEventListener('click', () => {
-        if (this.addModal) this.addModal.classList.add('active');
-      });
-    }
-
-    if (this.closeAddBtn) {
-      this.closeAddBtn.addEventListener('click', () => {
-        if (this.addModal) this.addModal.classList.remove('active');
+        const panel = document.getElementById('inline-add-video-panel');
+        const open = panel?.hidden ?? false;
+        if (panel) panel.hidden = !open;
+        this.openAddBtn.setAttribute('aria-expanded', String(open));
+        if (open) document.getElementById('new-vid-title')?.focus();
       });
     }
 
@@ -126,8 +124,10 @@ class DriveGallery {
         if (this.playerModal && this.playerModal.classList.contains('active')) {
           this.closePlayerModal();
         }
-        if (this.addModal && this.addModal.classList.contains('active')) {
-          this.addModal.classList.remove('active');
+        const addPanel = document.getElementById('inline-add-video-panel');
+        if (addPanel && !addPanel.hidden) {
+          addPanel.hidden = true;
+          this.openAddBtn?.setAttribute('aria-expanded', 'false');
         }
         if (this.editModal && this.editModal.classList.contains('active')) {
           this.editModal.classList.remove('active');
@@ -220,6 +220,12 @@ class DriveGallery {
     return 'assets/images/stage_curtain_cover.jpg';
   }
 
+  escapeHtml(value = '') {
+    return String(value).replace(/[&<>"']/g, char => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+  }
+
   /* --------------------------------------------------------------------------
      STATE & DATA LOADING
      -------------------------------------------------------------------------- */
@@ -305,9 +311,10 @@ class DriveGallery {
       const card = document.createElement('div');
       card.className = 'clip-item-card';
 
-      const safeTitle = item.title || "Varshini's Video Clip";
-      const safeDesc = item.desc || "Special memory clip for Priyavarshini.";
-      const coverUrl = this.getCoverImageForUrl(item.url, item.cover);
+      const safeTitle = this.escapeHtml(item.title || "Varshini's Video Clip");
+      const safeDesc = this.escapeHtml(item.desc || "Special memory clip for Priyavarshini.");
+      const safeUrl = this.escapeHtml(item.url || '');
+      const coverUrl = this.escapeHtml(this.getCoverImageForUrl(item.url || '', item.cover));
 
       card.innerHTML = `
         <div class="clip-poster-wrap">
@@ -332,7 +339,7 @@ class DriveGallery {
               <button class="edit-clip-btn" data-index="${index}" title="Edit Clip Details">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
-              <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="clip-drive-link-btn" title="Open in Google Drive">
+              <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="clip-drive-link-btn" title="Open video link">
                 <i class="fa-brands fa-google-drive"></i>
               </a>
               <button class="remove-clip-btn" data-index="${index}" title="Remove Clip">
@@ -467,7 +474,9 @@ class DriveGallery {
     localStorage.setItem(this.videosStorageKey, JSON.stringify(this.videos));
     this.renderVideoCards();
 
-    if (this.addModal) this.addModal.classList.remove('active');
+    const addPanel = document.getElementById('inline-add-video-panel');
+    if (addPanel) addPanel.hidden = true;
+    this.openAddBtn?.setAttribute('aria-expanded', 'false');
     if (this.addForm) this.addForm.reset();
 
     if (window.soundEngine) window.soundEngine.playHappyChirp();

@@ -525,6 +525,9 @@ class BookReader {
     }
 
     this.pageRightEl.innerHTML = rightContent;
+    // Each page begins at its illustration/title, even when the previous page was scrolled.
+    this.pageRightEl.scrollTop = 0;
+    document.querySelector('.reader-book-viewport')?.scrollTo({ top: 0, behavior: 'auto' });
     this.applyFontStyles();
 
     // Bind comments functionality if on dedicated comment page
@@ -534,7 +537,10 @@ class BookReader {
 
     // Update indicator & nav buttons
     if (this.pageIndicator) {
-      this.pageIndicator.textContent = `Page ${page.pageNumber} of ${book.pages.length}`;
+      const pageLabel = `Page ${page.pageNumber} of ${book.pages.length}`;
+      this.pageIndicator.textContent = `${page.pageNumber} / ${book.pages.length}`;
+      this.pageIndicator.setAttribute('aria-label', pageLabel);
+      this.pageIndicator.title = pageLabel;
     }
 
     if (this.prevBtn) {
